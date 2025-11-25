@@ -310,7 +310,12 @@ impl BashNode {
                     .map(|s| format!("    {}", s.to_code()))
                     .collect::<Vec<_>>()
                     .join("\n");
-                format!("for {} in {}; do\n{}\ndone", var, items_str.join(" "), body_str)
+                format!(
+                    "for {} in {}; do\n{}\ndone",
+                    var,
+                    items_str.join(" "),
+                    body_str
+                )
             }
             Self::While { condition, body } => {
                 let body_str: String = body
@@ -332,7 +337,11 @@ impl BashNode {
                 let patterns_str: String = patterns
                     .iter()
                     .map(|(pat, body)| {
-                        let body_str: String = body.iter().map(|s| s.to_code()).collect::<Vec<_>>().join("; ");
+                        let body_str: String = body
+                            .iter()
+                            .map(|s| s.to_code())
+                            .collect::<Vec<_>>()
+                            .join("; ");
                         format!("    {}) {};;\n", pat, body_str)
                     })
                     .collect();
@@ -378,7 +387,12 @@ impl BashNode {
                 redirect_type,
                 target,
             } => {
-                format!("{} {} {}", command.to_code(), redirect_type.to_str(), target)
+                format!(
+                    "{} {} {}",
+                    command.to_code(),
+                    redirect_type.to_str(),
+                    target
+                )
             }
         }
     }
@@ -455,7 +469,14 @@ impl BashNode {
             Self::Function { .. } => features.push("function".to_string()),
             Self::Case { .. } => features.push("case".to_string()),
             Self::Test { double, .. } => {
-                features.push(if *double { "test_double" } else { "test_single" }.to_string());
+                features.push(
+                    if *double {
+                        "test_double"
+                    } else {
+                        "test_single"
+                    }
+                    .to_string(),
+                );
             }
             Self::Compare { op, .. } => features.push(format!("compare_{}", op.to_str())),
             Self::Arithmetic(_) => features.push("arithmetic".to_string()),
@@ -532,7 +553,11 @@ impl BashEnumerator {
         // Generate if statements (depth 2+)
         if self.max_depth >= 2 {
             for var in &["x", "y"] {
-                for op in &[BashCompareOp::NumEq, BashCompareOp::NumGt, BashCompareOp::NumLt] {
+                for op in &[
+                    BashCompareOp::NumEq,
+                    BashCompareOp::NumGt,
+                    BashCompareOp::NumLt,
+                ] {
                     let node = BashNode::If {
                         condition: Box::new(BashNode::Test {
                             double: false,

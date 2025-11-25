@@ -115,8 +115,7 @@ impl TestPrioritizer {
     ///
     /// No-op for heuristic prioritizer. Use [`RLTestPrioritizer::update_feedback`]
     /// for learning-based prioritization.
-    pub fn update_feedback(&mut self, _feature: &str, _failed: bool) {
-    }
+    pub fn update_feedback(&mut self, _feature: &str, _failed: bool) {}
 }
 
 /// Feature extractor for code analysis

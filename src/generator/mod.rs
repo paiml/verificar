@@ -135,8 +135,7 @@ impl Generator {
         features_per_batch: usize,
         seed: u64,
     ) -> Vec<GeneratedCode> {
-        let mut generator =
-            SwarmGenerator::new(max_depth, features_per_batch).with_seed(seed);
+        let mut generator = SwarmGenerator::new(max_depth, features_per_batch).with_seed(seed);
         // Use batch size of count/4 to get diverse feature combinations
         let batch_size = (count / 4).max(5);
         generator.generate(count, batch_size)
@@ -152,8 +151,7 @@ impl Generator {
         features_per_batch: usize,
         seed: u64,
     ) -> (Vec<GeneratedCode>, SwarmStats) {
-        let mut generator =
-            SwarmGenerator::new(max_depth, features_per_batch).with_seed(seed);
+        let mut generator = SwarmGenerator::new(max_depth, features_per_batch).with_seed(seed);
         let batch_size = (count / 4).max(5);
         let programs = generator.generate(count, batch_size);
         let stats = generator.stats().clone();

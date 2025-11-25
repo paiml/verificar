@@ -51,7 +51,9 @@ impl AprenderBugPredictor {
 
         let y: Vec<usize> = labels.iter().map(|&b| usize::from(b)).collect();
 
-        let mut model = RandomForestClassifier::new(100).with_max_depth(10).with_random_state(42);
+        let mut model = RandomForestClassifier::new(100)
+            .with_max_depth(10)
+            .with_random_state(42);
 
         model
             .fit(&x, &y)

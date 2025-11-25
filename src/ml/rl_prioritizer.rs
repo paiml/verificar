@@ -102,11 +102,7 @@ impl RLTestPrioritizer {
     }
 
     /// Sample failure probability from Beta distribution (Thompson Sampling)
-    fn sample_failure_probability<R: rand::Rng>(
-        &self,
-        sig: &FeatureSignature,
-        rng: &mut R,
-    ) -> f64 {
+    fn sample_failure_probability<R: rand::Rng>(&self, sig: &FeatureSignature, rng: &mut R) -> f64 {
         use rand_distr::{Beta, Distribution};
 
         // Get counts with Laplace smoothing (prior: Beta(1,1))

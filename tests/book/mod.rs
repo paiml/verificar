@@ -17,3 +17,6 @@
 
 mod grammar_generation;
 mod integrations;
+mod mutation_testing;
+mod verification;
+mod ml_pipeline;

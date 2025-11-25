@@ -121,7 +121,9 @@ impl SwarmConfig {
 
         // Select up to features_per_batch additional features
         let to_select = features_per_batch.saturating_sub(enabled.len());
-        let selected: Vec<&Feature> = optional_features.choose_multiple(&mut rng, to_select).collect();
+        let selected: Vec<&Feature> = optional_features
+            .choose_multiple(&mut rng, to_select)
+            .collect();
 
         for feature in selected {
             enabled.insert(*feature);
@@ -240,7 +242,8 @@ impl SwarmGenerator {
             .take(count)
             .map(|mut prog| {
                 // Add swarm metadata to features
-                prog.features.push(format!("swarm_batch_{}", config.batch_id));
+                prog.features
+                    .push(format!("swarm_batch_{}", config.batch_id));
                 prog.features
                     .push(format!("swarm_features_{}", config.feature_count()));
                 prog

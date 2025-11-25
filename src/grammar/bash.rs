@@ -89,7 +89,6 @@ impl BashGrammar {
             true // No shebang is also valid
         }
     }
-
 }
 
 impl Grammar for BashGrammar {
@@ -272,7 +271,9 @@ mod tests {
 
     #[test]
     fn test_escaped_quotes() {
-        assert!(BashGrammar::is_balanced_quotes("echo \"hello \\\"world\\\"\""));
+        assert!(BashGrammar::is_balanced_quotes(
+            "echo \"hello \\\"world\\\"\""
+        ));
         assert!(BashGrammar::is_balanced_quotes("echo 'it\\'s'"));
     }
 }
