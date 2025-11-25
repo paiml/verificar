@@ -402,72 +402,73 @@ impl NautilusGenerator {
             coverage.record_path(p, &node_type);
         }
 
-        // Record features
         for feature in Self::extract_features(node) {
             coverage.record_feature(&feature);
         }
 
-        // Visit children
+        self.visit_children(node, &node_type, coverage);
+    }
+
+    fn visit_children(&self, node: &PythonNode, node_type: &str, coverage: &mut CoverageMap) {
         match node {
             PythonNode::Module(stmts) => {
                 for stmt in stmts {
-                    self.visit_ast_for_coverage(stmt, Some(&node_type), coverage);
+                    self.visit_ast_for_coverage(stmt, Some(node_type), coverage);
                 }
             }
             PythonNode::BinOp { left, right, .. } => {
-                self.visit_ast_for_coverage(left, Some(&node_type), coverage);
-                self.visit_ast_for_coverage(right, Some(&node_type), coverage);
+                self.visit_ast_for_coverage(left, Some(node_type), coverage);
+                self.visit_ast_for_coverage(right, Some(node_type), coverage);
             }
             PythonNode::UnaryOp { operand, .. } => {
-                self.visit_ast_for_coverage(operand, Some(&node_type), coverage);
+                self.visit_ast_for_coverage(operand, Some(node_type), coverage);
             }
             PythonNode::Compare { left, right, .. } => {
-                self.visit_ast_for_coverage(left, Some(&node_type), coverage);
-                self.visit_ast_for_coverage(right, Some(&node_type), coverage);
+                self.visit_ast_for_coverage(left, Some(node_type), coverage);
+                self.visit_ast_for_coverage(right, Some(node_type), coverage);
             }
             PythonNode::Assign { value, .. } => {
-                self.visit_ast_for_coverage(value, Some(&node_type), coverage);
+                self.visit_ast_for_coverage(value, Some(node_type), coverage);
             }
             PythonNode::Return(Some(expr)) => {
-                self.visit_ast_for_coverage(expr, Some(&node_type), coverage);
+                self.visit_ast_for_coverage(expr, Some(node_type), coverage);
             }
             PythonNode::If { test, body, orelse } => {
-                self.visit_ast_for_coverage(test, Some(&node_type), coverage);
+                self.visit_ast_for_coverage(test, Some(node_type), coverage);
                 for stmt in body {
-                    self.visit_ast_for_coverage(stmt, Some(&node_type), coverage);
+                    self.visit_ast_for_coverage(stmt, Some(node_type), coverage);
                 }
                 for stmt in orelse {
-                    self.visit_ast_for_coverage(stmt, Some(&node_type), coverage);
+                    self.visit_ast_for_coverage(stmt, Some(node_type), coverage);
                 }
             }
             PythonNode::While { test, body } => {
-                self.visit_ast_for_coverage(test, Some(&node_type), coverage);
+                self.visit_ast_for_coverage(test, Some(node_type), coverage);
                 for stmt in body {
-                    self.visit_ast_for_coverage(stmt, Some(&node_type), coverage);
+                    self.visit_ast_for_coverage(stmt, Some(node_type), coverage);
                 }
             }
             PythonNode::For { iter, body, .. } => {
-                self.visit_ast_for_coverage(iter, Some(&node_type), coverage);
+                self.visit_ast_for_coverage(iter, Some(node_type), coverage);
                 for stmt in body {
-                    self.visit_ast_for_coverage(stmt, Some(&node_type), coverage);
+                    self.visit_ast_for_coverage(stmt, Some(node_type), coverage);
                 }
             }
             PythonNode::FuncDef { body, .. } => {
                 for stmt in body {
-                    self.visit_ast_for_coverage(stmt, Some(&node_type), coverage);
+                    self.visit_ast_for_coverage(stmt, Some(node_type), coverage);
                 }
             }
             PythonNode::Call { args, .. } => {
                 for arg in args {
-                    self.visit_ast_for_coverage(arg, Some(&node_type), coverage);
+                    self.visit_ast_for_coverage(arg, Some(node_type), coverage);
                 }
             }
             PythonNode::List(items) => {
                 for item in items {
-                    self.visit_ast_for_coverage(item, Some(&node_type), coverage);
+                    self.visit_ast_for_coverage(item, Some(node_type), coverage);
                 }
             }
-            // Leaf nodes - no children
             PythonNode::IntLit(_)
             | PythonNode::FloatLit(_)
             | PythonNode::StrLit(_)
