@@ -72,11 +72,9 @@ impl Executor for PythonExecutor {
         let unique_id = COUNTER.fetch_add(1, Ordering::SeqCst);
         let temp_file = temp_dir.join(format!("verificar_{}_{}.py", std::process::id(), unique_id));
 
-        // Write code to temp file
         std::fs::write(&temp_file, code)
             .map_err(|e| Error::Verification(format!("Failed to write temp file: {e}")))?;
 
-        // Build command
         let mut cmd = Command::new(&self.interpreter);
         cmd.arg(&temp_file)
             .stdin(Stdio::piped())
@@ -98,13 +96,11 @@ impl Executor for PythonExecutor {
         let output = match wait_with_timeout(child, timeout) {
             Ok(output) => output,
             Err(e) => {
-                // Clean up temp file
                 let _ = std::fs::remove_file(&temp_file);
                 return Err(e);
             }
         };
 
-        // Clean up temp file
         let _ = std::fs::remove_file(&temp_file);
 
         let duration_ms = start.elapsed().as_millis() as u64;
@@ -164,11 +160,9 @@ impl Executor for RustExecutor {
             temp_dir.join(format!("verificar_{}_{}.rs", std::process::id(), unique_id));
         let binary_file = temp_dir.join(format!("verificar_{}_{}", std::process::id(), unique_id));
 
-        // Write code to temp file
         std::fs::write(&source_file, code)
             .map_err(|e| Error::Verification(format!("Failed to write temp file: {e}")))?;
 
-        // Compile
         let compile_output = Command::new(&self.compiler)
             .arg(&source_file)
             .arg("-o")

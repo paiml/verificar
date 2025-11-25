@@ -49,10 +49,8 @@ impl AprenderBugPredictor {
         let x = Matrix::from_vec(n_samples, n_features, data)
             .map_err(|e| crate::Error::Data(format!("Failed to create matrix: {e}")))?;
 
-        // Convert bool labels to usize (0 = no bug, 1 = bug)
         let y: Vec<usize> = labels.iter().map(|&b| usize::from(b)).collect();
 
-        // Train RandomForest with 100 trees, max depth 10
         let mut model = RandomForestClassifier::new(100).with_max_depth(10).with_random_state(42);
 
         model

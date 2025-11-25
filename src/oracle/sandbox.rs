@@ -265,14 +265,11 @@ impl Executor for SandboxedPythonExecutor {
             unique_id
         ));
 
-        // Wrap code with sandbox restrictions
         let sandboxed_code = self.wrap_code(code, input);
 
-        // Write to temp file
         std::fs::write(&temp_file, &sandboxed_code)
             .map_err(|e| Error::Verification(format!("Failed to write sandbox file: {e}")))?;
 
-        // Build command with isolation flags
         let mut cmd = Command::new(&self.interpreter);
         cmd.arg("-I") // Isolated mode: don't add user site directory, ignore PYTHON* env vars
             .arg("-E") // Ignore PYTHON* environment variables

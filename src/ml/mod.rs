@@ -45,24 +45,17 @@ impl BugPredictor {
     /// For ML-based prediction, use [`AprenderBugPredictor::train`] instead.
     #[must_use]
     pub fn predict(&self, features: &CodeFeatures) -> f32 {
-        // Simple heuristic model
         let mut score = 0.0_f32;
 
-        // Higher AST depth increases bug probability
         score += features.ast_depth as f32 * 0.05;
-
-        // More operators increase bug probability
         score += features.num_operators as f32 * 0.02;
 
-        // Edge values significantly increase bug probability
         if features.uses_edge_values {
             score += 0.3;
         }
 
-        // Higher complexity increases bug probability
         score += features.cyclomatic_complexity * 0.01;
 
-        // Clamp to [0, 1]
         score.clamp(0.0, 1.0)
     }
 
@@ -113,7 +106,6 @@ impl TestPrioritizer {
             .map(|(i, f)| (i, predictor.predict(f)))
             .collect();
 
-        // Sort by score descending (highest bug probability first)
         scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         scored.into_iter().map(|(i, _)| i).collect()
@@ -124,7 +116,6 @@ impl TestPrioritizer {
     /// No-op for heuristic prioritizer. Use [`RLTestPrioritizer::update_feedback`]
     /// for learning-based prioritization.
     pub fn update_feedback(&mut self, _feature: &str, _failed: bool) {
-        // No-op: heuristic prioritizer doesn't learn from feedback
     }
 }
 
