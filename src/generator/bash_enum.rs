@@ -672,6 +672,205 @@ impl BashEnumerator {
             }
         }
 
+        // Generate array assignments
+        let node = BashNode::Assignment {
+            name: "arr".to_string(),
+            value: Box::new(BashNode::Array(vec![
+                BashNode::IntLit(1),
+                BashNode::IntLit(2),
+                BashNode::IntLit(3),
+            ])),
+        };
+        if node.depth() <= self.max_depth {
+            programs.push(self.node_to_generated(&node));
+        }
+
+        // Generate command substitution
+        let node = BashNode::Assignment {
+            name: "output".to_string(),
+            value: Box::new(BashNode::CommandSubst(Box::new(BashNode::Command {
+                name: "echo".to_string(),
+                args: vec![BashNode::StringLit("hello".to_string())],
+            }))),
+        };
+        if node.depth() <= self.max_depth {
+            programs.push(self.node_to_generated(&node));
+        }
+
+        // Generate redirections
+        for redirect_type in &[RedirectType::Output, RedirectType::Append, RedirectType::Input] {
+            let target = match redirect_type {
+                RedirectType::Input => "/dev/null",
+                _ => "/tmp/output.txt",
+            };
+            let node = BashNode::Redirect {
+                command: Box::new(BashNode::Command {
+                    name: "echo".to_string(),
+                    args: vec![BashNode::StringLit("test".to_string())],
+                }),
+                redirect_type: *redirect_type,
+                target: target.to_string(),
+            };
+            if node.depth() <= self.max_depth {
+                programs.push(self.node_to_generated(&node));
+            }
+        }
+
+        // Generate more commands (cat, test, true, false)
+        for cmd in &["cat", "test", "true", "false", "pwd", "ls"] {
+            let node = BashNode::Command {
+                name: cmd.to_string(),
+                args: vec![],
+            };
+            if node.depth() <= self.max_depth {
+                programs.push(self.node_to_generated(&node));
+            }
+        }
+
+        // Generate double bracket tests (depth 2+)
+        if self.max_depth >= 2 {
+            for var in &["x", "str"] {
+                let node = BashNode::If {
+                    condition: Box::new(BashNode::Test {
+                        double: true,
+                        expr: Box::new(BashNode::Compare {
+                            left: Box::new(BashNode::Variable(var.to_string())),
+                            op: BashCompareOp::StrEq,
+                            right: Box::new(BashNode::StringLit("hello".to_string())),
+                        }),
+                    }),
+                    then_body: vec![BashNode::Command {
+                        name: "echo".to_string(),
+                        args: vec![BashNode::StringLit("match".to_string())],
+                    }],
+                    else_body: vec![],
+                };
+                if node.depth() <= self.max_depth {
+                    programs.push(self.node_to_generated(&node));
+                }
+            }
+        }
+
+        // Generate if-else statements (depth 2+)
+        if self.max_depth >= 2 {
+            let node = BashNode::If {
+                condition: Box::new(BashNode::Test {
+                    double: false,
+                    expr: Box::new(BashNode::Compare {
+                        left: Box::new(BashNode::Variable("x".to_string())),
+                        op: BashCompareOp::NumEq,
+                        right: Box::new(BashNode::IntLit(1)),
+                    }),
+                }),
+                then_body: vec![BashNode::Command {
+                    name: "echo".to_string(),
+                    args: vec![BashNode::StringLit("one".to_string())],
+                }],
+                else_body: vec![BashNode::Command {
+                    name: "echo".to_string(),
+                    args: vec![BashNode::StringLit("not one".to_string())],
+                }],
+            };
+            if node.depth() <= self.max_depth {
+                programs.push(self.node_to_generated(&node));
+            }
+        }
+
+        // Generate case statements (depth 2+)
+        if self.max_depth >= 2 {
+            let node = BashNode::Case {
+                value: Box::new(BashNode::Variable("x".to_string())),
+                patterns: vec![
+                    (
+                        "1".to_string(),
+                        vec![BashNode::Command {
+                            name: "echo".to_string(),
+                            args: vec![BashNode::StringLit("one".to_string())],
+                        }],
+                    ),
+                    (
+                        "2".to_string(),
+                        vec![BashNode::Command {
+                            name: "echo".to_string(),
+                            args: vec![BashNode::StringLit("two".to_string())],
+                        }],
+                    ),
+                    (
+                        "*".to_string(),
+                        vec![BashNode::Command {
+                            name: "echo".to_string(),
+                            args: vec![BashNode::StringLit("other".to_string())],
+                        }],
+                    ),
+                ],
+            };
+            if node.depth() <= self.max_depth {
+                programs.push(self.node_to_generated(&node));
+            }
+        }
+
+        // Generate string comparison operators
+        if self.max_depth >= 2 {
+            for op in &[BashCompareOp::StrEq, BashCompareOp::StrNe] {
+                let node = BashNode::If {
+                    condition: Box::new(BashNode::Test {
+                        double: true,
+                        expr: Box::new(BashNode::Compare {
+                            left: Box::new(BashNode::Variable("str".to_string())),
+                            op: *op,
+                            right: Box::new(BashNode::StringLit("test".to_string())),
+                        }),
+                    }),
+                    then_body: vec![BashNode::Command {
+                        name: "echo".to_string(),
+                        args: vec![BashNode::StringLit("matched".to_string())],
+                    }],
+                    else_body: vec![],
+                };
+                if node.depth() <= self.max_depth {
+                    programs.push(self.node_to_generated(&node));
+                }
+            }
+        }
+
+        // Generate for loops with file patterns
+        if self.max_depth >= 2 {
+            let node = BashNode::For {
+                var: "f".to_string(),
+                items: vec![BashNode::StringLit("*.txt".to_string())],
+                body: vec![BashNode::Command {
+                    name: "echo".to_string(),
+                    args: vec![BashNode::Variable("f".to_string())],
+                }],
+            };
+            if node.depth() <= self.max_depth {
+                programs.push(self.node_to_generated(&node));
+            }
+        }
+
+        // Generate nested pipes (depth 3+)
+        if self.max_depth >= 3 {
+            let node = BashNode::Pipe {
+                left: Box::new(BashNode::Command {
+                    name: "cat".to_string(),
+                    args: vec![BashNode::StringLit("/etc/passwd".to_string())],
+                }),
+                right: Box::new(BashNode::Pipe {
+                    left: Box::new(BashNode::Command {
+                        name: "grep".to_string(),
+                        args: vec![BashNode::StringLit("root".to_string())],
+                    }),
+                    right: Box::new(BashNode::Command {
+                        name: "wc".to_string(),
+                        args: vec![BashNode::StringLit("-l".to_string())],
+                    }),
+                }),
+            };
+            if node.depth() <= self.max_depth {
+                programs.push(self.node_to_generated(&node));
+            }
+        }
+
         programs
     }
 

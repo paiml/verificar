@@ -20,7 +20,7 @@ struct Cli {
 enum Commands {
     /// Generate test programs
     Generate {
-        /// Target language (python, bash, ruby, typescript, rust)
+        /// Target language (python, bash, c, ruchy, rust)
         #[arg(short, long, default_value = "python")]
         language: String,
 
@@ -80,8 +80,8 @@ fn parse_language(s: &str) -> Language {
     match s.to_lowercase().as_str() {
         "python" | "py" => Language::Python,
         "bash" | "sh" => Language::Bash,
-        "ruby" | "rb" => Language::Ruby,
-        "typescript" | "ts" => Language::TypeScript,
+        "c" => Language::C,
+        "ruchy" => Language::Ruchy,
         "rust" | "rs" => Language::Rust,
         _ => {
             eprintln!("Warning: Unknown language '{s}', defaulting to Python");

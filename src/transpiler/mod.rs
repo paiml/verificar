@@ -7,8 +7,8 @@
 //!
 //! - **depyler**: Python → Rust
 //! - **bashrs**: Bash → Safe Shell
-//! - **ruchy**: Ruby → Rust
-//! - **decy**: TypeScript → Rust
+//! - **ruchy**: Ruchy (standalone language)
+//! - **decy**: C → Rust
 
 mod oracle;
 
@@ -77,23 +77,23 @@ impl TranspilerConfig {
         }
     }
 
-    /// Configuration for ruchy (Ruby → Rust)
+    /// Configuration for ruchy (standalone Ruchy language)
     #[must_use]
     pub fn ruchy() -> Self {
         Self {
             name: "ruchy".to_string(),
-            source: Language::Ruby,
+            source: Language::Ruchy,
             target: Language::Rust,
             strict: true,
         }
     }
 
-    /// Configuration for decy (TypeScript → Rust)
+    /// Configuration for decy (C → Rust)
     #[must_use]
     pub fn decy() -> Self {
         Self {
             name: "decy".to_string(),
-            source: Language::TypeScript,
+            source: Language::C,
             target: Language::Rust,
             strict: true,
         }
@@ -126,7 +126,7 @@ mod tests {
     fn test_ruchy_config() {
         let config = TranspilerConfig::ruchy();
         assert_eq!(config.name, "ruchy");
-        assert_eq!(config.source, Language::Ruby);
+        assert_eq!(config.source, Language::Ruchy);
         assert_eq!(config.target, Language::Rust);
         assert!(config.strict);
     }
@@ -135,7 +135,7 @@ mod tests {
     fn test_decy_config() {
         let config = TranspilerConfig::decy();
         assert_eq!(config.name, "decy");
-        assert_eq!(config.source, Language::TypeScript);
+        assert_eq!(config.source, Language::C);
         assert_eq!(config.target, Language::Rust);
         assert!(config.strict);
     }

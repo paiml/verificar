@@ -62,14 +62,14 @@ pub use error::{Error, Result};
 /// Supported source languages for generation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Language {
-    /// Python (depyler target)
+    /// Python (depyler source → Rust)
     Python,
-    /// Bash (bashrs target)
+    /// Bash (bashrs source → Rust)
     Bash,
-    /// Ruby (ruchy target)
-    Ruby,
-    /// TypeScript (decy target)
-    TypeScript,
+    /// C (decy source → Rust)
+    C,
+    /// Ruchy (standalone language)
+    Ruchy,
     /// Rust (common target language)
     Rust,
 }
@@ -79,8 +79,8 @@ impl std::fmt::Display for Language {
         match self {
             Self::Python => write!(f, "python"),
             Self::Bash => write!(f, "bash"),
-            Self::Ruby => write!(f, "ruby"),
-            Self::TypeScript => write!(f, "typescript"),
+            Self::C => write!(f, "c"),
+            Self::Ruchy => write!(f, "ruchy"),
             Self::Rust => write!(f, "rust"),
         }
     }
@@ -101,13 +101,13 @@ mod tests {
     }
 
     #[test]
-    fn test_language_display_ruby() {
-        assert_eq!(format!("{}", Language::Ruby), "ruby");
+    fn test_language_display_c() {
+        assert_eq!(format!("{}", Language::C), "c");
     }
 
     #[test]
-    fn test_language_display_typescript() {
-        assert_eq!(format!("{}", Language::TypeScript), "typescript");
+    fn test_language_display_ruchy() {
+        assert_eq!(format!("{}", Language::Ruchy), "ruchy");
     }
 
     #[test]

@@ -95,6 +95,9 @@ rand_distr = "0.4"
 # Parallelization for generation
 rayon = "1.10"
 
+# Progress tracking
+indicatif = "0.17"
+
 # UUID for test case IDs
 uuid = { version = "1.11", features = ["v4", "serde"] }
 
@@ -107,6 +110,7 @@ aprender = { version = "0.9", optional = true }
 # Tree-sitter for grammar parsing (optional)
 tree-sitter = { version = "0.24", optional = true }
 tree-sitter-python = { version = "0.23", optional = true }
+tree-sitter-c = { version = "0.24", optional = true }
 
 # Pest for PEG grammars (optional)
 pest = { version = "2.7", optional = true }
@@ -121,7 +125,7 @@ tempfile = "3.14"
 [features]
 default = []
 parquet = ["dep:parquet", "dep:arrow"]
-tree-sitter = ["dep:tree-sitter", "dep:tree-sitter-python"]
+tree-sitter = ["dep:tree-sitter", "dep:tree-sitter-python", "dep:tree-sitter-c"]
 pest = ["dep:pest", "dep:pest_derive"]
 ml = ["dep:aprender"]
 full = ["parquet", "tree-sitter", "pest", "ml"]

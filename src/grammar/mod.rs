@@ -5,16 +5,20 @@
 //!
 //! # Supported Languages
 //!
-//! - Python (for depyler)
-//! - Bash (for bashrs)
-//! - Ruby (for ruchy)
-//! - TypeScript (for decy)
+//! - Python (for depyler → Rust)
+//! - Bash (for bashrs → Rust)
+//! - C (for decy → Rust)
+//! - Ruchy (standalone language)
 
 mod bash;
+mod c;
 mod python;
+mod ruchy;
 
 pub use bash::BashGrammar;
+pub use c::CGrammar;
 pub use python::PythonGrammar;
+pub use ruchy::RuchyGrammar;
 
 use crate::Language;
 
@@ -38,8 +42,8 @@ pub fn grammar_for(language: Language) -> Box<dyn Grammar> {
     match language {
         Language::Python => Box::new(PythonGrammar::new()),
         Language::Bash => Box::new(BashGrammar::new()),
-        Language::Ruby => todo!("Ruby grammar not yet implemented"),
-        Language::TypeScript => todo!("TypeScript grammar not yet implemented"),
+        Language::C => Box::new(CGrammar::new()),
+        Language::Ruchy => Box::new(RuchyGrammar::new()),
         Language::Rust => todo!("Rust grammar not yet implemented"),
     }
 }

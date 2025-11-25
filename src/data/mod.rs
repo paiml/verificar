@@ -2,9 +2,19 @@
 //!
 //! This module handles the storage and retrieval of verified
 //! (source, target, correctness) tuples in Parquet format.
+//!
+//! # Features
+//!
+//! - Large-scale parallel generation with progress tracking
+//! - Automatic Parquet sharding for large datasets
+//! - Support for all sampling strategies
 
 #[cfg(feature = "parquet")]
 pub mod parquet;
+
+pub mod pipeline;
+
+pub use pipeline::{DataPipeline, PipelineConfig, PipelineStats, PipelineStrategy};
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

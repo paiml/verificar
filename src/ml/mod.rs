@@ -13,10 +13,19 @@
 //! - **trueno**: SIMD-accelerated tensor operations
 
 mod aprender;
+mod evaluator;
 mod rl_prioritizer;
+mod trainer;
 
 pub use self::aprender::AprenderBugPredictor;
+pub use self::evaluator::{
+    benchmark_inference, calculate_feature_importance, BenchmarkResult, ComparisonMetrics,
+    ConfusionMatrix, FeatureImportance, ModelComparison, RocCurve, RocPoint,
+};
 pub use self::rl_prioritizer::RLTestPrioritizer;
+pub use self::trainer::{
+    ModelMetrics, ModelTrainer, SerializedModel, TrainingConfig, TrainingResult,
+};
 use crate::data::CodeFeatures;
 
 /// Heuristic bug prediction model (legacy)

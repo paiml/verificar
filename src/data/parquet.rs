@@ -556,8 +556,8 @@ impl ParquetReader {
             "Python" => Ok(Language::Python),
             "Rust" => Ok(Language::Rust),
             "Bash" => Ok(Language::Bash),
-            "Ruby" => Ok(Language::Ruby),
-            "TypeScript" => Ok(Language::TypeScript),
+            "C" => Ok(Language::C),
+            "Ruchy" => Ok(Language::Ruchy),
             _ => Err(Error::Data(format!("Unknown language: {s}"))),
         }
     }
