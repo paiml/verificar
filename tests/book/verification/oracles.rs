@@ -13,7 +13,13 @@ fn test_io_oracle_example() {
     let target_code = "println!(\"{}\", 2 + 2);";
     let input = "";
 
-    let verdict = oracle.verify(source_code, target_code, input, Language::Python, Language::Rust);
+    let verdict = oracle.verify(
+        source_code,
+        target_code,
+        input,
+        Language::Python,
+        Language::Rust,
+    );
 
     assert!(verdict.is_ok());
 }

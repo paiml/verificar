@@ -51,6 +51,10 @@ fn test_all_operators_example() {
 
     // Should have mutations from AOR, ROR, BSR
     assert!(!mutations.is_empty());
-    assert!(mutations.iter().any(|m| m.operator == MutationOperator::Aor));
-    assert!(mutations.iter().any(|m| m.operator == MutationOperator::Ror));
+    assert!(mutations
+        .iter()
+        .any(|m| m.operator == MutationOperator::Aor));
+    assert!(mutations
+        .iter()
+        .any(|m| m.operator == MutationOperator::Ror));
 }
