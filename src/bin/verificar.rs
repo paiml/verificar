@@ -4,7 +4,9 @@
 
 use clap::{Parser, Subcommand};
 use std::io::Write;
-use verificar::generator::{Generator, SamplingStrategy};
+use verificar::generator::{
+    AdvancedDepylerPatternGenerator, DepylerPatternGenerator, Generator, SamplingStrategy,
+};
 use verificar::Language;
 
 /// Verificar - Synthetic Data Factory for Code Intelligence
@@ -73,6 +75,25 @@ enum Commands {
         /// Random seed
         #[arg(long, default_value = "42")]
         seed: u64,
+    },
+
+    /// Generate depyler-targeted test patterns
+    Depyler {
+        /// Maximum pattern depth (1-4)
+        #[arg(short = 'd', long, default_value = "4")]
+        max_depth: usize,
+
+        /// Pattern category (all, file-io, json, context)
+        #[arg(short, long, default_value = "all")]
+        category: String,
+
+        /// Output format (text, json, files)
+        #[arg(short, long, default_value = "text")]
+        output: String,
+
+        /// Output directory for files output format
+        #[arg(long, default_value = "depyler_tests")]
+        output_dir: String,
     },
 }
 
@@ -201,6 +222,83 @@ fn main() {
                 writeln!(handle, "# Program {}", i + 1).ok();
                 writeln!(handle, "{}", prog.code).ok();
                 writeln!(handle).ok();
+            }
+        }
+
+        Commands::Depyler {
+            max_depth,
+            category,
+            output,
+            output_dir,
+        } => {
+            use verificar::generator::{
+                ContextManagerPatternGenerator, FileIOPatternGenerator, JsonDictPatternGenerator,
+            };
+
+            let programs = match category.as_str() {
+                "file-io" | "fileio" | "io" => FileIOPatternGenerator::new(max_depth).generate(),
+                "json" | "dict" => JsonDictPatternGenerator::new(max_depth).generate(),
+                "context" | "ctx" | "with" => {
+                    ContextManagerPatternGenerator::new(max_depth).generate()
+                }
+                "advanced" | "edge" | "hard" => {
+                    AdvancedDepylerPatternGenerator::new(max_depth).generate()
+                }
+                _ => DepylerPatternGenerator::new(max_depth).generate(),
+            };
+
+            match output.as_str() {
+                "json" => {
+                    let items: Vec<_> = programs
+                        .iter()
+                        .map(|p| {
+                            serde_json::json!({
+                                "code": p.code,
+                                "features": p.features,
+                                "ast_depth": p.ast_depth
+                            })
+                        })
+                        .collect();
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&items).unwrap_or_default()
+                    );
+                }
+                "files" => {
+                    std::fs::create_dir_all(&output_dir).ok();
+                    for (i, prog) in programs.iter().enumerate() {
+                        let feature = prog.features.first().map_or("test", String::as_str);
+                        let filename = format!("{output_dir}/test_{i:03}_{feature}.py");
+                        std::fs::write(&filename, &prog.code).ok();
+                        println!("Wrote: {filename}");
+                    }
+                    println!("\nGenerated {} test files in {output_dir}/", programs.len());
+                }
+                _ => {
+                    let (_, stats) = DepylerPatternGenerator::new(max_depth).generate_with_stats();
+                    println!("Depyler Pattern Generator");
+                    println!("=========================");
+                    println!("Category:     {category}");
+                    println!("Max depth:    {max_depth}");
+                    println!();
+                    println!("Pattern Statistics:");
+                    println!("  File I/O:         {}", stats.file_io_count);
+                    println!("  JSON/Dict:        {}", stats.json_dict_count);
+                    println!("  Context Manager:  {}", stats.context_manager_count);
+                    println!("  Total:            {}", stats.total_count);
+                    println!();
+
+                    for (i, prog) in programs.iter().enumerate() {
+                        let feature = prog.features.first().map_or("unknown", String::as_str);
+                        println!(
+                            "--- Pattern {} [{}] (depth: {}) ---",
+                            i + 1,
+                            feature,
+                            prog.ast_depth
+                        );
+                        println!("{}", prog.code);
+                    }
+                }
             }
         }
     }

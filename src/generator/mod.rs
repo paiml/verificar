@@ -12,14 +12,23 @@
 //! - **Boundary**: Edge values emphasized
 
 mod bash_enum;
+mod c_enum;
 mod coverage;
+mod depyler_patterns;
 mod python_enum;
+mod ruchy_enum;
 mod strategy;
 mod swarm;
 
 pub use bash_enum::{BashArithOp, BashCompareOp, BashEnumerator, BashNode};
+pub use c_enum::{CBinaryOp, CCompareOp, CEnumerator, CNode, CType, CUnaryOp};
 pub use coverage::{CorpusEntry, CoverageMap, CoverageStats, NautilusGenerator};
+pub use depyler_patterns::{
+    AdvancedDepylerPatternGenerator, ContextManagerPatternGenerator, DepylerPatternGenerator,
+    DepylerPatternStats, FileIOPatternGenerator, JsonDictPatternGenerator,
+};
 pub use python_enum::{BinaryOp, CompareOp, PythonEnumerator, PythonNode, UnaryOp};
+pub use ruchy_enum::{RuchyBinaryOp, RuchyCompareOp, RuchyEnumerator, RuchyNode, RuchyType};
 pub use strategy::SamplingStrategy;
 pub use swarm::{Feature, SwarmConfig, SwarmGenerator, SwarmStats};
 
@@ -232,8 +241,28 @@ impl Generator {
                     .filter(|p| grammar.validate(&p.code))
                     .collect()
             }
-            _ => {
-                // Other languages not yet implemented
+            Language::C => {
+                use crate::grammar::CGrammar;
+                let enumerator = CEnumerator::new(max_depth);
+                let programs = enumerator.enumerate_programs();
+                let grammar = CGrammar::new();
+                programs
+                    .into_iter()
+                    .filter(|p| grammar.validate(&p.code))
+                    .collect()
+            }
+            Language::Ruchy => {
+                use crate::grammar::RuchyGrammar;
+                let enumerator = RuchyEnumerator::new(max_depth);
+                let programs = enumerator.enumerate_programs();
+                let grammar = RuchyGrammar::new();
+                programs
+                    .into_iter()
+                    .filter(|p| grammar.validate(&p.code))
+                    .collect()
+            }
+            Language::Rust => {
+                // Rust is a target language, not a source for generation
                 vec![]
             }
         }
@@ -252,26 +281,26 @@ impl Generator {
                 let enumerator = BashEnumerator::new(max_depth);
                 enumerator.enumerate_programs()
             }
-            _ => vec![],
+            Language::C => {
+                let enumerator = CEnumerator::new(max_depth);
+                enumerator.enumerate_programs()
+            }
+            Language::Ruchy => {
+                let enumerator = RuchyEnumerator::new(max_depth);
+                enumerator.enumerate_programs()
+            }
+            Language::Rust => vec![],
         };
 
         let total = all_programs.len();
 
-        #[cfg(feature = "tree-sitter")]
-        let (valid, invalid) = {
-            use crate::grammar::PythonGrammar;
-            let grammar = PythonGrammar::new();
-            let valid: Vec<_> = all_programs
-                .iter()
-                .filter(|p| grammar.validate(&p.code))
-                .cloned()
-                .collect();
-            let valid_count = valid.len();
-            (valid, total - valid_count)
-        };
-
-        #[cfg(not(feature = "tree-sitter"))]
-        let (valid, invalid) = (all_programs, 0);
+        // Use the generator's grammar for validation
+        let valid: Vec<_> = all_programs
+            .iter()
+            .filter(|p| self.grammar.validate(&p.code))
+            .cloned()
+            .collect();
+        let invalid = total - valid.len();
 
         GenerationStats {
             total_generated: total,

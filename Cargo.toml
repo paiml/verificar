@@ -55,10 +55,11 @@ cast_possible_truncation = "allow"
 cast_precision_loss = "allow"
 needless_pass_by_value = "allow"
 derivable_impls = "allow"
+match_same_arms = "allow"
 
 [package]
 name = "verificar"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Pragmatic AI Labs"]
@@ -108,8 +109,8 @@ trueno = "0.7"
 aprender = { version = "0.9", optional = true }
 
 # Tree-sitter for grammar parsing (optional)
-tree-sitter = { version = "0.24", optional = true }
-tree-sitter-python = { version = "0.23", optional = true }
+tree-sitter = { version = "0.25", optional = true }
+tree-sitter-python = { version = "0.25", optional = true }
 tree-sitter-c = { version = "0.24", optional = true }
 
 # Pest for PEG grammars (optional)

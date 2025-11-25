@@ -698,7 +698,11 @@ impl BashEnumerator {
         }
 
         // Generate redirections
-        for redirect_type in &[RedirectType::Output, RedirectType::Append, RedirectType::Input] {
+        for redirect_type in &[
+            RedirectType::Output,
+            RedirectType::Append,
+            RedirectType::Input,
+        ] {
             let target = match redirect_type {
                 RedirectType::Input => "/dev/null",
                 _ => "/tmp/output.txt",
@@ -874,9 +878,14 @@ impl BashEnumerator {
         // ==== MASSIVE EXPANSION FOR 1000+ PROGRAMS ====
 
         // Extended variable and value sets for combinatorial explosion
-        let vars = ["x", "y", "z", "a", "b", "n", "i", "j", "k", "count", "sum", "result", "tmp", "val", "num"];
+        let vars = [
+            "x", "y", "z", "a", "b", "n", "i", "j", "k", "count", "sum", "result", "tmp", "val",
+            "num",
+        ];
         let ints = [0, 1, 2, 3, 5, 10, 42, 100, 255, -1];
-        let strings = ["hello", "world", "test", "foo", "bar", "baz", "value", "data", "file", ""];
+        let strings = [
+            "hello", "world", "test", "foo", "bar", "baz", "value", "data", "file", "",
+        ];
 
         // Generate more variable assignments with all combinations
         for var in &vars {
@@ -905,10 +914,12 @@ impl BashEnumerator {
         }
 
         // Extensive command generation
-        let cmds = ["echo", "printf", "cat", "ls", "pwd", "cd", "mkdir", "rm", "cp", "mv",
-                    "grep", "sed", "awk", "cut", "sort", "uniq", "wc", "head", "tail", "tee",
-                    "true", "false", "test", "exit", "return", "break", "continue",
-                    "read", "export", "unset", "local", "declare", "typeset", "readonly"];
+        let cmds = [
+            "echo", "printf", "cat", "ls", "pwd", "cd", "mkdir", "rm", "cp", "mv", "grep", "sed",
+            "awk", "cut", "sort", "uniq", "wc", "head", "tail", "tee", "true", "false", "test",
+            "exit", "return", "break", "continue", "read", "export", "unset", "local", "declare",
+            "typeset", "readonly",
+        ];
 
         for cmd in &cmds {
             // Command with no args
@@ -921,7 +932,17 @@ impl BashEnumerator {
             }
 
             // Command with various args
-            for arg in &["$x", "$1", "$@", "-n", "-e", "-r", "-f", "file.txt", "/dev/null"] {
+            for arg in &[
+                "$x",
+                "$1",
+                "$@",
+                "-n",
+                "-e",
+                "-r",
+                "-f",
+                "file.txt",
+                "/dev/null",
+            ] {
                 let node = BashNode::Command {
                     name: cmd.to_string(),
                     args: vec![BashNode::StringLit(arg.to_string())],
@@ -1012,8 +1033,18 @@ impl BashEnumerator {
                 for items in &[
                     vec![BashNode::IntLit(1)],
                     vec![BashNode::IntLit(1), BashNode::IntLit(2)],
-                    vec![BashNode::IntLit(1), BashNode::IntLit(2), BashNode::IntLit(3)],
-                    vec![BashNode::IntLit(0), BashNode::IntLit(1), BashNode::IntLit(2), BashNode::IntLit(3), BashNode::IntLit(4)],
+                    vec![
+                        BashNode::IntLit(1),
+                        BashNode::IntLit(2),
+                        BashNode::IntLit(3),
+                    ],
+                    vec![
+                        BashNode::IntLit(0),
+                        BashNode::IntLit(1),
+                        BashNode::IntLit(2),
+                        BashNode::IntLit(3),
+                        BashNode::IntLit(4),
+                    ],
                 ] {
                     let node = BashNode::For {
                         var: var.to_string(),
@@ -1049,7 +1080,12 @@ impl BashEnumerator {
         if self.max_depth >= 2 {
             for var in &["x", "n", "count", "i"] {
                 for limit in &[0, 1, 5, 10] {
-                    for op in &[BashCompareOp::NumGt, BashCompareOp::NumLt, BashCompareOp::NumGe, BashCompareOp::NumLe] {
+                    for op in &[
+                        BashCompareOp::NumGt,
+                        BashCompareOp::NumLt,
+                        BashCompareOp::NumGe,
+                        BashCompareOp::NumLe,
+                    ] {
                         let node = BashNode::While {
                             condition: Box::new(BashNode::Test {
                                 double: false,
@@ -1061,11 +1097,13 @@ impl BashEnumerator {
                             }),
                             body: vec![BashNode::Assignment {
                                 name: var.to_string(),
-                                value: Box::new(BashNode::Arithmetic(Box::new(BashNode::ArithOp {
-                                    left: Box::new(BashNode::Variable(var.to_string())),
-                                    op: BashArithOp::Sub,
-                                    right: Box::new(BashNode::IntLit(1)),
-                                }))),
+                                value: Box::new(BashNode::Arithmetic(Box::new(
+                                    BashNode::ArithOp {
+                                        left: Box::new(BashNode::Variable(var.to_string())),
+                                        op: BashArithOp::Sub,
+                                        right: Box::new(BashNode::IntLit(1)),
+                                    },
+                                ))),
                             }],
                         };
                         if node.depth() <= self.max_depth {
@@ -1078,14 +1116,18 @@ impl BashEnumerator {
 
         // Functions with different names and bodies
         if self.max_depth >= 2 {
-            let func_names = ["main", "init", "setup", "cleanup", "run", "process", "validate", "check", "build", "deploy"];
+            let func_names = [
+                "main", "init", "setup", "cleanup", "run", "process", "validate", "check", "build",
+                "deploy",
+            ];
             let bodies = ["echo done", "return 0", "exit 0", "true", "pwd"];
 
             for name in &func_names {
                 for body_cmd in &bodies {
                     let parts: Vec<&str> = body_cmd.split_whitespace().collect();
                     let cmd_name = parts[0];
-                    let args: Vec<BashNode> = parts[1..].iter()
+                    let args: Vec<BashNode> = parts[1..]
+                        .iter()
                         .map(|a| BashNode::StringLit(a.to_string()))
                         .collect();
 
@@ -1109,15 +1151,23 @@ impl BashEnumerator {
                 for patterns in &[
                     vec![("1", "one"), ("2", "two"), ("*", "other")],
                     vec![("a", "alpha"), ("b", "beta"), ("*", "default")],
-                    vec![("start", "starting"), ("stop", "stopping"), ("*", "unknown")],
+                    vec![
+                        ("start", "starting"),
+                        ("stop", "stopping"),
+                        ("*", "unknown"),
+                    ],
                     vec![("yes", "y"), ("no", "n"), ("*", "invalid")],
                 ] {
-                    let pattern_nodes: Vec<(String, Vec<BashNode>)> = patterns.iter()
+                    let pattern_nodes: Vec<(String, Vec<BashNode>)> = patterns
+                        .iter()
                         .map(|(pat, resp)| {
-                            (pat.to_string(), vec![BashNode::Command {
-                                name: "echo".to_string(),
-                                args: vec![BashNode::StringLit(resp.to_string())],
-                            }])
+                            (
+                                pat.to_string(),
+                                vec![BashNode::Command {
+                                    name: "echo".to_string(),
+                                    args: vec![BashNode::StringLit(resp.to_string())],
+                                }],
+                            )
                         })
                         .collect();
 
@@ -1134,8 +1184,19 @@ impl BashEnumerator {
 
         // Pipe combinations
         if self.max_depth >= 2 {
-            let pipe_lefts = [("echo", "hello"), ("cat", "file.txt"), ("ls", "-la"), ("ps", "aux")];
-            let pipe_rights = [("grep", "pattern"), ("wc", "-l"), ("head", "-n10"), ("sort", "-n"), ("cut", "-d:")];
+            let pipe_lefts = [
+                ("echo", "hello"),
+                ("cat", "file.txt"),
+                ("ls", "-la"),
+                ("ps", "aux"),
+            ];
+            let pipe_rights = [
+                ("grep", "pattern"),
+                ("wc", "-l"),
+                ("head", "-n10"),
+                ("sort", "-n"),
+                ("cut", "-d:"),
+            ];
 
             for (left_cmd, left_arg) in &pipe_lefts {
                 for (right_cmd, right_arg) in &pipe_rights {
@@ -1157,8 +1218,20 @@ impl BashEnumerator {
         }
 
         // Redirections with all types
-        for redirect_type in &[RedirectType::Output, RedirectType::Append, RedirectType::Input, RedirectType::StderrToStdout] {
-            for target in &["/dev/null", "/tmp/out.txt", "output.log", "result.txt", "&1", "&2"] {
+        for redirect_type in &[
+            RedirectType::Output,
+            RedirectType::Append,
+            RedirectType::Input,
+            RedirectType::StderrToStdout,
+        ] {
+            for target in &[
+                "/dev/null",
+                "/tmp/out.txt",
+                "output.log",
+                "result.txt",
+                "&1",
+                "&2",
+            ] {
                 for cmd in &["echo", "cat", "ls"] {
                     let node = BashNode::Redirect {
                         command: Box::new(BashNode::Command {
@@ -1180,7 +1253,8 @@ impl BashEnumerator {
             for cmd in &["pwd", "date", "whoami", "hostname", "uname -a"] {
                 let parts: Vec<&str> = cmd.split_whitespace().collect();
                 let cmd_name = parts[0];
-                let args: Vec<BashNode> = parts[1..].iter()
+                let args: Vec<BashNode> = parts[1..]
+                    .iter()
                     .map(|a| BashNode::StringLit(a.to_string()))
                     .collect();
 
@@ -1202,10 +1276,21 @@ impl BashEnumerator {
             for items in &[
                 vec![BashNode::IntLit(1)],
                 vec![BashNode::IntLit(1), BashNode::IntLit(2)],
-                vec![BashNode::IntLit(1), BashNode::IntLit(2), BashNode::IntLit(3)],
+                vec![
+                    BashNode::IntLit(1),
+                    BashNode::IntLit(2),
+                    BashNode::IntLit(3),
+                ],
                 vec![BashNode::StringLit("a".to_string())],
-                vec![BashNode::StringLit("a".to_string()), BashNode::StringLit("b".to_string())],
-                vec![BashNode::StringLit("foo".to_string()), BashNode::StringLit("bar".to_string()), BashNode::StringLit("baz".to_string())],
+                vec![
+                    BashNode::StringLit("a".to_string()),
+                    BashNode::StringLit("b".to_string()),
+                ],
+                vec![
+                    BashNode::StringLit("foo".to_string()),
+                    BashNode::StringLit("bar".to_string()),
+                    BashNode::StringLit("baz".to_string()),
+                ],
             ] {
                 let node = BashNode::Assignment {
                     name: var.to_string(),
@@ -1220,7 +1305,11 @@ impl BashEnumerator {
         // If-else with different conditions and bodies
         if self.max_depth >= 2 {
             for var in &["x", "n", "flag", "status"] {
-                for op in &[BashCompareOp::NumEq, BashCompareOp::NumNe, BashCompareOp::NumGt] {
+                for op in &[
+                    BashCompareOp::NumEq,
+                    BashCompareOp::NumNe,
+                    BashCompareOp::NumGt,
+                ] {
                     for val in &[0, 1] {
                         let node = BashNode::If {
                             condition: Box::new(BashNode::Test {
@@ -1573,5 +1662,9 @@ fn test_bash_program_count() {
     let enumerator = BashEnumerator::new(3);
     let programs = enumerator.enumerate_programs();
     println!("Generated {} bash programs at depth 3", programs.len());
-    assert!(programs.len() >= 1000, "Expected at least 1000 programs, got {}", programs.len());
+    assert!(
+        programs.len() >= 1000,
+        "Expected at least 1000 programs, got {}",
+        programs.len()
+    );
 }
