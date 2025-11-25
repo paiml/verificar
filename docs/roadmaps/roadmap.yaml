@@ -1,0 +1,263 @@
+roadmap_version: '1.0'
+github_enabled: false
+github_repo: paiml/verificar
+roadmap:
+- id: VERIFICAR-001
+  github_issue: null
+  item_type: task
+  title: Implement Python grammar with tree-sitter
+  status: completed
+  priority: high
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T06:11:17.412563180+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - grammar
+  - python
+  - tree-sitter
+  notes: null
+- id: VERIFICAR-002
+  github_issue: null
+  item_type: task
+  title: Implement exhaustive enumeration generator
+  status: completed
+  priority: high
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T06:21:01.995692812+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - generator
+  - enumeration
+  notes: null
+- id: VERIFICAR-003
+  github_issue: null
+  item_type: task
+  title: Implement coverage-guided generation (NAUTILUS-style)
+  status: completed
+  priority: high
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T07:03:27.963812909+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - generator
+  - coverage
+  - nautilus
+  notes: null
+- id: VERIFICAR-004
+  github_issue: null
+  item_type: task
+  title: Implement sandbox execution for Python
+  status: completed
+  priority: high
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T07:40:00.000000000+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - oracle
+  - sandbox
+  - python
+  notes: null
+- id: VERIFICAR-005
+  github_issue: null
+  item_type: task
+  title: Implement I/O diffing verification oracle
+  status: completed
+  priority: high
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T06:53:30.366356836+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - oracle
+  - verification
+  notes: null
+- id: VERIFICAR-006
+  github_issue: null
+  item_type: task
+  title: Implement Parquet data pipeline
+  status: completed
+  priority: medium
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T10:00:00.000000000+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - data
+  - parquet
+  notes: ParquetWriter and ParquetReader implemented with Arrow 57.0. 10 tests for all TestResult variants. Conditional compilation via 'parquet' feature flag.
+- id: VERIFICAR-010
+  github_issue: null
+  item_type: task
+  title: Implement full AST-based mutation operators
+  status: completed
+  priority: high
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T06:30:42.013105616+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - mutator
+  - ast
+  notes: null
+- id: VERIFICAR-011
+  github_issue: null
+  item_type: task
+  title: Implement swarm testing strategy
+  status: completed
+  priority: medium
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T11:00:00.000000000+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - generator
+  - swarm
+  notes: SwarmGenerator with 19 feature categories. Random feature subset selection per batch (Groce et al. 2012). 23 tests. Integrated with Generator::generate_swarm().
+- id: VERIFICAR-012
+  github_issue: null
+  item_type: task
+  title: Integrate with depyler transpiler
+  status: completed
+  priority: high
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T07:45:00.000000000+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - transpiler
+  - depyler
+  - integration
+  notes: null
+- id: VERIFICAR-013
+  github_issue: null
+  item_type: task
+  title: Add Bash grammar for bashrs
+  status: completed
+  priority: medium
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T09:40:31.000000000+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - grammar
+  - bash
+  - bashrs
+  notes: BashGrammar with heuristic validation (quote/bracket balancing). BashEnumerator with full AST representation (Script, Assignment, Command, If, For, While, Function, Case, Pipe, Redirect). 55 tests for Bash grammar and enumeration.
+- id: VERIFICAR-020
+  github_issue: null
+  item_type: task
+  title: Integrate aprender for bug prediction
+  status: completed
+  priority: medium
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T09:53:44.000000000+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - ml
+  - aprender
+  - prediction
+  notes: Created ml/aprender.rs with AprenderBugPredictor using RandomForestClassifier (100 trees, max depth 10). Feature extraction from CodeFeatures (ast_depth, num_operators, num_control_flow, cyclomatic_complexity, uses_edge_values). Binary classification for bug prediction. Feature-gated behind 'ml' feature flag. 450 tests pass.
+- id: VERIFICAR-021
+  github_issue: null
+  item_type: task
+  title: Implement RL-based test prioritizer
+  status: completed
+  priority: medium
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T09:56:45.000000000+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - ml
+  - prioritization
+  - rl
+  notes: Created ml/rl_prioritizer.rs with RLTestPrioritizer using Thompson Sampling (contextual bandit). Feature signature bucketing (ast_depth, operators, complexity, edge_values). Beta distribution for uncertainty quantification. update_feedback() method for online learning from test results. 455 total tests pass.
+- id: VERIFICAR-030
+  github_issue: null
+  item_type: task
+  title: Achieve 95% test coverage
+  status: completed
+  priority: high
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 2025-11-25T09:00:00.000000000+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - testing
+  - coverage
+  notes: Coverage at 95.48% (390 tests). Started at 64.31%. Using cargo-llvm-cov --lib.
+- id: VERIFICAR-031
+  github_issue: null
+  item_type: task
+  title: Achieve 85% mutation score
+  status: planned
+  priority: medium
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 1970-01-01T00:00:00Z
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - testing
+  - mutation
+  notes: null
