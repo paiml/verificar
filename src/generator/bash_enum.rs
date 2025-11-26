@@ -1668,3 +1668,91 @@ fn test_bash_program_count() {
         programs.len()
     );
 }
+
+#[test]
+fn test_bash_program_uniqueness() {
+    use std::collections::HashSet;
+
+    let enumerator = BashEnumerator::new(3);
+    let programs = enumerator.enumerate_programs();
+
+    let unique: HashSet<_> = programs.iter().map(|p| &p.code).collect();
+    let unique_count = unique.len();
+    let total_count = programs.len();
+
+    println!(
+        "Unique: {}/{} ({:.1}%)",
+        unique_count,
+        total_count,
+        100.0 * unique_count as f64 / total_count as f64
+    );
+
+    // At least 80% should be unique
+    assert!(
+        unique_count as f64 / total_count as f64 >= 0.80,
+        "Expected at least 80% unique programs, got {}%",
+        100 * unique_count / total_count
+    );
+}
+
+#[test]
+fn test_bash_feature_coverage() {
+    use std::collections::HashSet;
+
+    // Use depth 5 to include while loops (they have depth 5: While > body > Assignment > Arithmetic > ArithOp)
+    let enumerator = BashEnumerator::new(5);
+    let programs = enumerator.enumerate_programs();
+
+    let mut all_features = HashSet::new();
+    let mut all_code = String::new();
+
+    for prog in &programs {
+        for feature in &prog.features {
+            all_features.insert(feature.clone());
+        }
+        all_code.push_str(&prog.code);
+        all_code.push('\n');
+    }
+
+    println!("Covered features: {:?}", all_features);
+
+    // Should cover core bash features (check code content for control flow)
+    let required_features = ["assignment", "command", "for", "function", "pipe", "case"];
+    for feature in required_features {
+        assert!(
+            all_features.iter().any(|f| f.contains(feature)),
+            "Missing feature: {feature}"
+        );
+    }
+
+    // Check code content for if/while (may not be in features list due to AST structure)
+    // Note: If statements generate "if [ ... ]" or "if [[ ... ]]"
+    let has_if = all_code.contains("if [") || all_code.contains("if;");
+    let has_while = all_code.contains("while [") || all_code.contains("while;");
+
+    // Verify control flow features
+    let has_if_feature = all_features.contains("if");
+    let has_while_feature = all_features.contains("while");
+
+    assert!(has_if || has_if_feature, "Missing if statements");
+    assert!(has_while || has_while_feature, "Missing while loops");
+}
+
+#[test]
+fn test_bash_depth_distribution() {
+    let enumerator = BashEnumerator::new(3);
+    let programs = enumerator.enumerate_programs();
+
+    let mut depth_counts = [0usize; 4];
+    for prog in &programs {
+        if prog.ast_depth <= 3 {
+            depth_counts[prog.ast_depth] += 1;
+        }
+    }
+
+    println!("Depth distribution: {:?}", depth_counts);
+
+    // Should have programs at multiple depths
+    assert!(depth_counts[1] > 0, "No depth-1 programs");
+    assert!(depth_counts[2] > 0, "No depth-2 programs");
+}

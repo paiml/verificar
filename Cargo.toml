@@ -59,7 +59,7 @@ match_same_arms = "allow"
 
 [package]
 name = "verificar"
-version = "0.3.2"
+version = "0.4.0"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Pragmatic AI Labs"]
@@ -108,6 +108,9 @@ trueno = "0.7"
 # Machine learning for bug prediction (optional)
 aprender = { version = "0.9", optional = true }
 
+# LLM fine-tuning integration (optional)
+entrenar = { version = "0.1", optional = true }
+
 # Tree-sitter for grammar parsing (optional)
 tree-sitter = { version = "0.25", optional = true }
 tree-sitter-python = { version = "0.25", optional = true }
@@ -129,7 +132,8 @@ parquet = ["dep:parquet", "dep:arrow"]
 tree-sitter = ["dep:tree-sitter", "dep:tree-sitter-python", "dep:tree-sitter-c"]
 pest = ["dep:pest", "dep:pest_derive"]
 ml = ["dep:aprender"]
-full = ["parquet", "tree-sitter", "pest", "ml"]
+llm = ["dep:entrenar"]
+full = ["parquet", "tree-sitter", "pest", "ml", "llm"]
 # Chaos engineering features (from renacer)
 chaos-basic = []
 chaos-network = ["chaos-basic"]

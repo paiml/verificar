@@ -2,6 +2,15 @@
 //!
 //! Exports verified transpilation tuples for LoRA fine-tuning with entrenar.
 //! See VERIFICAR-090.
+//!
+//! # Knowledge Distillation
+//!
+//! From spec Section 5.4: Multi-teacher distillation via temperature-scaled
+//! KL divergence (Hinton et al. 2015).
+//!
+//! ```text
+//! L_distill = α * KL(softmax(z_s/T) || softmax(z_t/T)) + (1-α) * L_CE
+//! ```
 
 use crate::data::VerifiedTuple;
 use serde::{Deserialize, Serialize};
@@ -151,6 +160,277 @@ pub struct ExportStats {
     pub avg_source_len: f64,
     /// Average target code length
     pub avg_target_len: f64,
+}
+
+// ============================================================================
+// Knowledge Distillation Configuration (Spec Section 5.4)
+// ============================================================================
+
+/// Configuration for knowledge distillation training
+///
+/// Implements multi-teacher distillation via temperature-scaled KL divergence
+/// (Hinton et al. 2015). The loss function is:
+///
+/// ```text
+/// L_distill = α * KL(softmax(z_s/T) || softmax(z_t/T)) + (1-α) * L_CE
+/// ```
+///
+/// Where:
+/// - `T` is the temperature (higher = softer distributions)
+/// - `α` is the balance between distillation and cross-entropy loss
+/// - `z_s` and `z_t` are student and teacher logits
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DistillationConfig {
+    /// Temperature for softmax (higher = softer probabilities)
+    /// Typical values: 1.0-10.0. Default: 3.0
+    pub temperature: f32,
+
+    /// Balance between distillation loss and CE loss
+    /// α=1.0 means pure distillation, α=0.0 means pure CE
+    /// Typical values: 0.5-0.9. Default: 0.7
+    pub alpha: f32,
+
+    /// Number of teacher models for ensemble distillation
+    pub num_teachers: usize,
+
+    /// Student model configuration
+    pub student: StudentConfig,
+
+    /// Training hyperparameters
+    pub training: DistillTrainingConfig,
+
+    /// Output directory for distilled model
+    pub output_dir: std::path::PathBuf,
+}
+
+impl Default for DistillationConfig {
+    fn default() -> Self {
+        Self {
+            temperature: 3.0,
+            alpha: 0.7,
+            num_teachers: 1,
+            student: StudentConfig::default(),
+            training: DistillTrainingConfig::default(),
+            output_dir: std::path::PathBuf::from("distilled_model"),
+        }
+    }
+}
+
+/// Student model architecture configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StudentConfig {
+    /// Model type identifier
+    pub model_type: String,
+    /// Hidden dimension size
+    pub hidden_size: usize,
+    /// Number of transformer layers
+    pub num_layers: usize,
+    /// Number of output classes (for classification)
+    pub num_classes: usize,
+}
+
+impl Default for StudentConfig {
+    fn default() -> Self {
+        Self {
+            model_type: "distilled_student".to_string(),
+            hidden_size: 256,
+            num_layers: 4,
+            num_classes: 18, // 18 defect categories from org-intel
+        }
+    }
+}
+
+/// Training configuration for distillation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DistillTrainingConfig {
+    /// Number of training epochs
+    pub epochs: usize,
+    /// Batch size
+    pub batch_size: usize,
+    /// Learning rate
+    pub learning_rate: f64,
+    /// Gradient clipping norm
+    pub grad_clip: f32,
+    /// Whether to use mixed precision training
+    pub fp16: bool,
+}
+
+impl Default for DistillTrainingConfig {
+    fn default() -> Self {
+        Self {
+            epochs: 3,
+            batch_size: 32,
+            learning_rate: 1e-4,
+            grad_clip: 1.0,
+            fp16: false,
+        }
+    }
+}
+
+/// Result from distillation training
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DistillationResult {
+    /// Final distillation loss
+    pub final_loss: f32,
+    /// Loss history per epoch
+    pub loss_history: Vec<f32>,
+    /// Number of teachers used
+    pub teacher_count: usize,
+    /// Student model configuration
+    pub student_config: StudentConfig,
+    /// Temperature used
+    pub temperature: f32,
+    /// Alpha used
+    pub alpha: f32,
+    /// Training status
+    pub status: String,
+    /// Additional notes
+    pub note: String,
+}
+
+impl DistillationConfig {
+    /// Create a new distillation config
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Builder: set temperature
+    #[must_use]
+    pub fn with_temperature(mut self, temperature: f32) -> Self {
+        self.temperature = temperature;
+        self
+    }
+
+    /// Builder: set alpha (distillation weight)
+    #[must_use]
+    pub fn with_alpha(mut self, alpha: f32) -> Self {
+        self.alpha = alpha;
+        self
+    }
+
+    /// Builder: set number of teachers
+    #[must_use]
+    pub fn with_teachers(mut self, num_teachers: usize) -> Self {
+        self.num_teachers = num_teachers;
+        self
+    }
+
+    /// Builder: set student config
+    #[must_use]
+    pub fn with_student(mut self, student: StudentConfig) -> Self {
+        self.student = student;
+        self
+    }
+
+    /// Builder: set training config
+    #[must_use]
+    pub fn with_training(mut self, training: DistillTrainingConfig) -> Self {
+        self.training = training;
+        self
+    }
+
+    /// Builder: set output directory
+    #[must_use]
+    pub fn with_output_dir(mut self, output_dir: impl Into<std::path::PathBuf>) -> Self {
+        self.output_dir = output_dir.into();
+        self
+    }
+
+    /// Generate YAML configuration file for entrenar distillation
+    #[must_use]
+    pub fn to_yaml(&self) -> String {
+        format!(
+            "# Entrenar Distillation Config\n\
+             # Generated by verificar distill\n\
+             \n\
+             model:\n\
+             \x20 type: student\n\
+             \x20 hidden_size: {}\n\
+             \x20 num_layers: {}\n\
+             \n\
+             distillation:\n\
+             \x20 temperature: {}\n\
+             \x20 alpha: {}\n\
+             \x20 num_teachers: {}\n\
+             \n\
+             training:\n\
+             \x20 epochs: {}\n\
+             \x20 batch_size: {}\n\
+             \x20 learning_rate: {:e}\n\
+             \n\
+             data:\n\
+             \x20 teacher_logits: \"/tmp/teacher_logits\"\n\
+             \x20 output_dir: {:?}\n",
+            self.student.hidden_size,
+            self.student.num_layers,
+            self.temperature,
+            self.alpha,
+            self.num_teachers,
+            self.training.epochs,
+            self.training.batch_size,
+            self.training.learning_rate,
+            self.output_dir
+        )
+    }
+
+    /// Run placeholder distillation (simulates training)
+    ///
+    /// Full distillation requires entrenar LLM feature and teacher model weights.
+    /// This returns a placeholder result for testing the pipeline.
+    #[must_use]
+    pub fn run_placeholder(&self) -> DistillationResult {
+        // Simulate decreasing loss over epochs
+        let mut loss_history = Vec::with_capacity(self.training.epochs);
+        let mut loss = 2.6_f32;
+
+        for _ in 0..self.training.epochs {
+            loss *= 0.75; // Simulate 25% improvement per epoch
+            loss_history.push(loss);
+        }
+
+        DistillationResult {
+            final_loss: loss,
+            loss_history,
+            teacher_count: self.num_teachers,
+            student_config: self.student.clone(),
+            temperature: self.temperature,
+            alpha: self.alpha,
+            status: "placeholder".to_string(),
+            note: "Full distillation requires entrenar llm feature and teacher model weights"
+                .to_string(),
+        }
+    }
+
+    /// Validate configuration parameters
+    ///
+    /// # Errors
+    ///
+    /// Returns error if parameters are invalid
+    pub fn validate(&self) -> Result<(), String> {
+        if self.temperature <= 0.0 {
+            return Err("temperature must be positive".to_string());
+        }
+        if !(0.0..=1.0).contains(&self.alpha) {
+            return Err("alpha must be in [0.0, 1.0]".to_string());
+        }
+        if self.num_teachers == 0 {
+            return Err("num_teachers must be at least 1".to_string());
+        }
+        if self.student.hidden_size == 0 {
+            return Err("hidden_size must be positive".to_string());
+        }
+        if self.student.num_layers == 0 {
+            return Err("num_layers must be at least 1".to_string());
+        }
+        if self.training.epochs == 0 {
+            return Err("epochs must be at least 1".to_string());
+        }
+        if self.training.learning_rate <= 0.0 {
+            return Err("learning_rate must be positive".to_string());
+        }
+        Ok(())
+    }
 }
 
 /// Exporter for entrenar training data
@@ -553,5 +833,233 @@ mod tests {
         // - Compare different prompt templates
         // - Validate on held-out test set
         unimplemented!("LLM evaluation not yet implemented")
+    }
+
+    // ========== DISTILLATION CONFIG TESTS ==========
+
+    #[test]
+    fn test_distillation_config_default() {
+        let config = DistillationConfig::default();
+
+        assert!((config.temperature - 3.0).abs() < f32::EPSILON);
+        assert!((config.alpha - 0.7).abs() < f32::EPSILON);
+        assert_eq!(config.num_teachers, 1);
+        assert_eq!(config.student.hidden_size, 256);
+        assert_eq!(config.student.num_layers, 4);
+        assert_eq!(config.student.num_classes, 18);
+        assert_eq!(config.training.epochs, 3);
+    }
+
+    #[test]
+    fn test_distillation_config_builder() {
+        let config = DistillationConfig::new()
+            .with_temperature(5.0)
+            .with_alpha(0.9)
+            .with_teachers(3)
+            .with_output_dir("/tmp/model");
+
+        assert!((config.temperature - 5.0).abs() < f32::EPSILON);
+        assert!((config.alpha - 0.9).abs() < f32::EPSILON);
+        assert_eq!(config.num_teachers, 3);
+        assert_eq!(config.output_dir.to_str().unwrap(), "/tmp/model");
+    }
+
+    #[test]
+    fn test_distillation_config_with_student() {
+        let student = StudentConfig {
+            model_type: "custom".to_string(),
+            hidden_size: 512,
+            num_layers: 8,
+            num_classes: 10,
+        };
+
+        let config = DistillationConfig::new().with_student(student);
+
+        assert_eq!(config.student.model_type, "custom");
+        assert_eq!(config.student.hidden_size, 512);
+        assert_eq!(config.student.num_layers, 8);
+        assert_eq!(config.student.num_classes, 10);
+    }
+
+    #[test]
+    fn test_distillation_config_with_training() {
+        let training = DistillTrainingConfig {
+            epochs: 10,
+            batch_size: 64,
+            learning_rate: 5e-5,
+            grad_clip: 0.5,
+            fp16: true,
+        };
+
+        let config = DistillationConfig::new().with_training(training);
+
+        assert_eq!(config.training.epochs, 10);
+        assert_eq!(config.training.batch_size, 64);
+        assert!((config.training.learning_rate - 5e-5).abs() < f64::EPSILON);
+        assert!(config.training.fp16);
+    }
+
+    #[test]
+    fn test_distillation_config_to_yaml() {
+        let config = DistillationConfig::default();
+        let yaml = config.to_yaml();
+
+        assert!(yaml.contains("temperature: 3"));
+        assert!(yaml.contains("alpha: 0.7"));
+        assert!(yaml.contains("hidden_size: 256"));
+        assert!(yaml.contains("num_layers: 4"));
+        assert!(yaml.contains("epochs: 3"));
+    }
+
+    #[test]
+    fn test_distillation_config_validate_valid() {
+        let config = DistillationConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_distillation_config_validate_invalid_temperature() {
+        let config = DistillationConfig::default().with_temperature(0.0);
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("temperature"));
+    }
+
+    #[test]
+    fn test_distillation_config_validate_invalid_alpha() {
+        let config = DistillationConfig::default().with_alpha(1.5);
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("alpha"));
+    }
+
+    #[test]
+    fn test_distillation_config_validate_invalid_teachers() {
+        let config = DistillationConfig::default().with_teachers(0);
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("teachers"));
+    }
+
+    #[test]
+    fn test_distillation_config_validate_invalid_hidden_size() {
+        let mut config = DistillationConfig::default();
+        config.student.hidden_size = 0;
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("hidden_size"));
+    }
+
+    #[test]
+    fn test_distillation_config_validate_invalid_layers() {
+        let mut config = DistillationConfig::default();
+        config.student.num_layers = 0;
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("num_layers"));
+    }
+
+    #[test]
+    fn test_distillation_config_validate_invalid_epochs() {
+        let mut config = DistillationConfig::default();
+        config.training.epochs = 0;
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("epochs"));
+    }
+
+    #[test]
+    fn test_distillation_config_validate_invalid_lr() {
+        let mut config = DistillationConfig::default();
+        config.training.learning_rate = 0.0;
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("learning_rate"));
+    }
+
+    #[test]
+    fn test_run_placeholder() {
+        let config = DistillationConfig::default();
+        let result = config.run_placeholder();
+
+        assert_eq!(result.teacher_count, 1);
+        assert!((result.temperature - 3.0).abs() < f32::EPSILON);
+        assert!((result.alpha - 0.7).abs() < f32::EPSILON);
+        assert_eq!(result.loss_history.len(), 3); // 3 epochs
+        assert!(result.final_loss < 2.6); // Should decrease
+        assert_eq!(result.status, "placeholder");
+    }
+
+    #[test]
+    fn test_distillation_result_serde() {
+        let result = DistillationResult {
+            final_loss: 0.5,
+            loss_history: vec![1.0, 0.75, 0.5],
+            teacher_count: 2,
+            student_config: StudentConfig::default(),
+            temperature: 3.0,
+            alpha: 0.7,
+            status: "complete".to_string(),
+            note: "test".to_string(),
+        };
+
+        let json = serde_json::to_string(&result).unwrap();
+        let parsed: DistillationResult = serde_json::from_str(&json).unwrap();
+
+        assert!((parsed.final_loss - 0.5).abs() < f32::EPSILON);
+        assert_eq!(parsed.teacher_count, 2);
+        assert_eq!(parsed.loss_history.len(), 3);
+    }
+
+    #[test]
+    fn test_student_config_default() {
+        let config = StudentConfig::default();
+
+        assert_eq!(config.model_type, "distilled_student");
+        assert_eq!(config.hidden_size, 256);
+        assert_eq!(config.num_layers, 4);
+        assert_eq!(config.num_classes, 18);
+    }
+
+    #[test]
+    fn test_distill_training_config_default() {
+        let config = DistillTrainingConfig::default();
+
+        assert_eq!(config.epochs, 3);
+        assert_eq!(config.batch_size, 32);
+        assert!((config.learning_rate - 1e-4).abs() < f64::EPSILON);
+        assert!((config.grad_clip - 1.0).abs() < f32::EPSILON);
+        assert!(!config.fp16);
+    }
+
+    #[test]
+    fn test_distillation_config_debug() {
+        let config = DistillationConfig::default();
+        let debug = format!("{config:?}");
+        assert!(debug.contains("DistillationConfig"));
+        assert!(debug.contains("temperature"));
+    }
+
+    #[test]
+    fn test_distillation_config_clone() {
+        let config = DistillationConfig::default();
+        let cloned = config.clone();
+        assert!((cloned.temperature - config.temperature).abs() < f32::EPSILON);
+        assert_eq!(cloned.num_teachers, config.num_teachers);
+    }
+
+    #[test]
+    fn test_loss_history_decreasing() {
+        let config = DistillationConfig::new()
+            .with_training(DistillTrainingConfig {
+                epochs: 5,
+                ..Default::default()
+            });
+        let result = config.run_placeholder();
+
+        // Verify loss decreases over epochs
+        for i in 1..result.loss_history.len() {
+            assert!(result.loss_history[i] < result.loss_history[i - 1]);
+        }
     }
 }

@@ -12,8 +12,10 @@
 #[cfg(feature = "parquet")]
 pub mod parquet;
 
+pub mod corpus;
 pub mod pipeline;
 
+pub use corpus::{CorpusFormat, CorpusManager, CorpusMetadata, TrainingCorpus};
 pub use pipeline::{DataPipeline, PipelineConfig, PipelineStats, PipelineStrategy};
 
 use serde::{Deserialize, Serialize};

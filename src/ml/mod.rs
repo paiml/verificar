@@ -12,21 +12,53 @@
 //! - **entrenar**: LoRA fine-tuning for code models
 //! - **trueno**: SIMD-accelerated tensor operations
 
+mod active_learner;
 mod aprender;
+mod augmentation;
+mod codex_pipeline;
+mod commit_features;
+mod defect_predictor;
 mod entrenar;
 mod evaluator;
+mod quality_gate;
+mod rich_labeling;
 mod rl_prioritizer;
 mod trainer;
 mod training;
 
+pub use self::active_learner::{
+    ActiveLearner, Cluster, ClusterStats, ClusteringResult, CodeEmbedder, CodeEmbedding,
+    KMeansClustering,
+};
 pub use self::aprender::AprenderBugPredictor;
+pub use self::codex_pipeline::{
+    CodexPipeline, DataQualityMetrics, PipelineConfig, PipelineResult, PipelineStats,
+    PreparedSample, StageResult,
+};
+pub use self::augmentation::{
+    AugmentationResult, BatchAugmenter, CodeEDA, CodeEDAConfig,
+};
+pub use self::commit_features::{CommitFeatureExtractor, CommitFeatures, FeatureStats};
+pub use self::defect_predictor::{
+    CategoryWeights, DefectCategory, DefectPrediction, DefectPredictor, DefectPredictorStats,
+    DefectSample,
+};
 pub use self::entrenar::{
-    generate_entrenar_config, CodeTranslationExample, EntrenarExporter, ExportConfig,
-    ExportFormat, ExportStats, PromptTemplate,
+    generate_entrenar_config, CodeTranslationExample, DistillationConfig, DistillationResult,
+    DistillTrainingConfig, EntrenarExporter, ExportConfig, ExportFormat, ExportStats,
+    PromptTemplate, StudentConfig,
 };
 pub use self::evaluator::{
     benchmark_inference, calculate_feature_importance, BenchmarkResult, ComparisonMetrics,
     ConfusionMatrix, FeatureImportance, ModelComparison, RocCurve, RocPoint,
+};
+pub use self::quality_gate::{
+    CodeQualityFeatures, FeatureExtractor as QualityFeatureExtractor, QualityGate,
+    QualityGateStats, QualityVerdict,
+};
+pub use self::rich_labeling::{
+    AstDiff, ErrorCategory, ExecutionMetrics, LabelExtractor, RichLabel, SoftLabels,
+    SoftLabelsBuilder,
 };
 pub use self::rl_prioritizer::RLTestPrioritizer;
 pub use self::trainer::{
