@@ -369,3 +369,19 @@ roadmap:
   - oracle
   - formal-verification
   notes: Research-grade feature - I/O oracle sufficient for v0.4
+- id: GH-2
+  github_issue: null
+  item_type: task
+  title: 'New task: GH-2'
+  status: completed
+  priority: medium
+  assigned_to: null
+  created: 2025-11-26T12:30:36.490288258+00:00
+  updated: 2025-11-26T12:33:31.972128619+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels: []
+  notes: null

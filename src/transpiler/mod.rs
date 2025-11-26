@@ -10,8 +10,12 @@
 //! - **ruchy**: Ruchy (standalone language)
 //! - **decy**: C → Rust
 
+mod ml_oracle;
 mod oracle;
 
+pub use ml_oracle::{
+    BaselinePredictor, BugPredictor, CodeFeatures, ComplexityPredictor, TestPrioritizer,
+};
 pub use oracle::{TranspilerOracle, TranspilerVerdict, TranspilerVerification, VerificationStats};
 
 use crate::grammar::Grammar;
