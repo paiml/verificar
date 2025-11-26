@@ -16,6 +16,7 @@ mod aprender;
 mod evaluator;
 mod rl_prioritizer;
 mod trainer;
+mod training;
 
 pub use self::aprender::AprenderBugPredictor;
 pub use self::evaluator::{
@@ -24,7 +25,12 @@ pub use self::evaluator::{
 };
 pub use self::rl_prioritizer::RLTestPrioritizer;
 pub use self::trainer::{
-    ModelMetrics, ModelTrainer, SerializedModel, TrainingConfig, TrainingResult,
+    ModelMetrics, ModelTrainer as LegacyModelTrainer, SerializedModel,
+    TrainingConfig as LegacyTrainingConfig, TrainingResult,
+};
+pub use self::training::{
+    train_test_split, verdict_to_label, CrossValidationResults, ModelTrainer, TrainedModel,
+    TrainingConfig, TrainingError, TrainingExample, TrainingMetrics,
 };
 use crate::data::CodeFeatures;
 
