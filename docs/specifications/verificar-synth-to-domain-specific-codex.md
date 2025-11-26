@@ -254,7 +254,44 @@ The design draws from 10 peer-reviewed publications spanning grammar-based fuzzi
 > ```
 > Same oracle contract for depyler (Python sandbox), bashrs (restricted shell), ruchy (Ruby sandbox), decy (Deno sandbox). Abnormality detection is language-agnostic.
 
-### 3.2 Transpiler Integration
+### 3.2 Semantic Equivalence Oracle
+
+Beyond I/O comparison, verificar provides advanced semantic verification (`src/oracle/semantic.rs`):
+
+```rust
+/// Semantic equivalence verdict
+pub enum SemanticVerdict {
+    /// Semantically equivalent
+    Equivalent,
+    /// Semantically different with explanation
+    Different { reason: String, details: DifferenceDetails },
+    /// Cannot determine equivalence
+    Unknown { reason: String },
+}
+
+/// Oracle implementations
+pub trait SemanticOracle: Send + Sync {
+    fn check_equivalence(&self, source: &str, target: &str) -> SemanticVerdict;
+    fn ast_similarity(&self, source: &str, target: &str) -> f64;
+    fn compare_memory(&self, source: &str, target: &str) -> bool;
+    fn compare_performance(&self, source: &str, target: &str) -> Option<f64>;
+}
+
+// Available oracles:
+// - AstSemanticOracle: AST-based similarity using tree edit distance
+// - FormalVerificationOracle: Z3 SMT solver for bounded model checking
+// - CombinedSemanticOracle: Multi-strategy with fast AST + optional formal
+```
+
+**Verification Strategy Tiers**:
+
+| Tier | Oracle | Use Case | Performance |
+|------|--------|----------|-------------|
+| **Fast** | I/O Oracle | Majority of cases | ~100 tests/s |
+| **Medium** | AST Semantic | Structural analysis | ~50 tests/s |
+| **Slow** | Formal (Z3) | Security-critical | ~1 test/s |
+
+### 3.3 Transpiler Integration
 
 ```rust
 /// Trait implemented by each transpiler
@@ -709,6 +746,16 @@ verificar evaluate \
   --model models/bug_predictor.bin \
   --test data/test/ \
   --output reports/evaluation.json
+
+# Export for LLM fine-tuning (entrenar)
+verificar export \
+  --input data/verified/ \
+  --output entrenar_data/ \
+  --format jsonl \
+  --template instruction \
+  --split 0.9 \
+  --lora-rank 16 \
+  --gen-config
 ```
 
 **Sampling Strategies**:
@@ -719,6 +766,20 @@ verificar evaluate \
 | Coverage-Guided | `--strategy coverage` | NAUTILUS-style coverage feedback |
 | Swarm | `--strategy swarm` | Random feature subsets per batch |
 | Boundary | `--strategy boundary` | Edge values emphasized |
+
+**Entrenar Export Formats** (`src/ml/entrenar.rs`):
+| Format | Flag | Description |
+|--------|------|-------------|
+| JSON Lines | `--format jsonl` | One JSON object per line (default) |
+| JSON | `--format json` | Single JSON array |
+| Parquet | `--format parquet` | Apache Parquet (columnar) |
+
+**Prompt Templates**:
+| Template | Flag | Description |
+|----------|------|-------------|
+| Instruction | `--template instruction` | Alpaca/Vicuna format with code blocks |
+| Chat | `--template chat` | ChatML format for chat models |
+| Completion | `--template completion` | Minimal format for base models |
 
 ### 7.4 CI/CD Pipeline
 
@@ -875,9 +936,11 @@ test_cases.parquet
 - [x] CLI for end-to-end pipeline
 - [x] Published to crates.io v0.3.2
 
-### Future Work (Low Priority)
+### Future Work (Low Priority) ✅ COMPLETE
 - [x] VERIFICAR-090: LLM fine-tuning integration with entrenar ✅
-- [ ] VERIFICAR-091: Semantic equivalence oracle (beyond I/O)
+- [x] VERIFICAR-091: Semantic equivalence oracle (beyond I/O) ✅
+
+**All 16 roadmap items complete** (VERIFICAR-041 cancelled - TypeScript grammar superseded by C grammar for decy).
 
 > **[Review Annotation]**
 > **Principle**: *Hoshin Kanri (Policy Deployment)*
