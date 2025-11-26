@@ -23,10 +23,16 @@
 mod diff;
 mod executor;
 mod sandbox;
+mod semantic;
 
 pub use diff::{diff_results, format_diff, DiffOptions, DiffResult, Difference, DifferenceKind};
 pub use executor::{executor_for, Executor, PythonExecutor, RustExecutor};
 pub use sandbox::{SandboxConfig, SandboxedPythonExecutor};
+pub use semantic::{
+    AstSemanticOracle, CombinedSemanticOracle, Complexity, DifferenceCategory, DifferenceDetails,
+    FormalVerificationOracle, HeapAllocation, MemoryLayout, PerformanceProfile, SemanticDifference,
+    SemanticNode, SemanticOracle, SemanticVerdict,
+};
 
 use crate::{Language, Result};
 

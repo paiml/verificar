@@ -24,6 +24,42 @@ use crate::mutator::MutationOperator;
 use crate::oracle::VerificationResult;
 use crate::Language;
 
+/// Verified transpilation tuple for ML training
+///
+/// Represents a successful transpilation with both source and target code.
+/// Used for LLM fine-tuning with entrenar.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VerifiedTuple {
+    /// Source language
+    pub source_language: Language,
+    /// Target language
+    pub target_language: Language,
+    /// Original source code
+    pub source_code: String,
+    /// Transpiled target code
+    pub target_code: String,
+    /// Whether the transpilation was verified correct (I/O equivalent)
+    pub is_correct: bool,
+    /// Execution time in milliseconds
+    pub execution_time_ms: u64,
+}
+
+impl VerifiedTuple {
+    /// Create from a test case (only if transpilation succeeded)
+    #[must_use]
+    pub fn from_test_case(test_case: &TestCase) -> Option<Self> {
+        let target_code = test_case.target_code.as_ref()?;
+        Some(Self {
+            source_language: test_case.source_language,
+            target_language: test_case.target_language,
+            source_code: test_case.source_code.clone(),
+            target_code: target_code.clone(),
+            is_correct: matches!(test_case.result, TestResult::Pass),
+            execution_time_ms: 0, // Not tracked in TestCase
+        })
+    }
+}
+
 /// Test case with full metadata
 ///
 /// From spec Section 8.1: Generated test case schema.

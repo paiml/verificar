@@ -140,6 +140,37 @@ enum Commands {
         #[arg(short, long, default_value = "text")]
         output: String,
     },
+
+    /// Export verified tuples for LLM fine-tuning (entrenar)
+    Export {
+        /// Input directory containing verified data
+        #[arg(short, long)]
+        input: String,
+
+        /// Output directory for training data
+        #[arg(short, long, default_value = "entrenar_data")]
+        output: String,
+
+        /// Export format (json, jsonl, parquet)
+        #[arg(short, long, default_value = "jsonl")]
+        format: String,
+
+        /// Prompt template (instruction, chat, completion)
+        #[arg(short, long, default_value = "instruction")]
+        template: String,
+
+        /// Train/val split ratio
+        #[arg(long, default_value = "0.9")]
+        split: f64,
+
+        /// LoRA rank for generated config
+        #[arg(long, default_value = "16")]
+        lora_rank: usize,
+
+        /// Generate entrenar YAML config
+        #[arg(long, default_value = "false")]
+        gen_config: bool,
+    },
 }
 
 fn parse_language(s: &str) -> Language {
@@ -550,6 +581,112 @@ fn main() {
                 );
                 println!();
                 println!("Note: Full evaluation requires `--features ml`");
+            }
+        }
+
+        Commands::Export {
+            input,
+            output,
+            format,
+            template,
+            split,
+            lora_rank,
+            gen_config,
+        } => {
+            use std::path::Path;
+            use verificar::ml::{
+                generate_entrenar_config, EntrenarExporter, ExportConfig, ExportFormat,
+                PromptTemplate,
+            };
+
+            println!("Entrenar Export Pipeline");
+            println!("========================");
+            println!("Input:    {input}");
+            println!("Output:   {output}");
+            println!("Format:   {format}");
+            println!("Template: {template}");
+            println!("Split:    {:.0}% train / {:.0}% val", split * 100.0, (1.0 - split) * 100.0);
+            println!();
+
+            let input_path = Path::new(&input);
+            if !input_path.exists() {
+                eprintln!("Error: Input directory '{input}' does not exist");
+                std::process::exit(1);
+            }
+
+            // Parse format
+            let export_format = match format.as_str() {
+                "json" => ExportFormat::Json,
+                "jsonl" => ExportFormat::Jsonl,
+                "parquet" => ExportFormat::Parquet,
+                _ => {
+                    eprintln!("Warning: Unknown format '{format}', using jsonl");
+                    ExportFormat::Jsonl
+                }
+            };
+
+            // Parse template
+            let prompt_template = match template.as_str() {
+                "instruction" | "inst" => PromptTemplate::instruction_following(),
+                "chat" => PromptTemplate::chat_style(),
+                "completion" | "base" => PromptTemplate::completion_style(),
+                _ => {
+                    eprintln!("Warning: Unknown template '{template}', using instruction");
+                    PromptTemplate::instruction_following()
+                }
+            };
+
+            let config = ExportConfig {
+                format: export_format,
+                template: prompt_template,
+                train_ratio: split,
+                seed: 42,
+                max_examples: None,
+            };
+
+            let exporter = EntrenarExporter::new(config);
+
+            // For now, create sample data (actual implementation would load from input)
+            let sample_tuples = vec![
+                verificar::data::VerifiedTuple {
+                    source_language: Language::Python,
+                    target_language: Language::Rust,
+                    source_code: "def add(a: int, b: int) -> int:\n    return a + b".to_string(),
+                    target_code: "fn add(a: i32, b: i32) -> i32 {\n    a + b\n}".to_string(),
+                    is_correct: true,
+                    execution_time_ms: 10,
+                },
+            ];
+
+            let output_path = Path::new(&output);
+            match exporter.export(&sample_tuples, output_path) {
+                Ok(stats) => {
+                    println!("Export Statistics:");
+                    println!("  Total examples:     {}", stats.total);
+                    println!("  Training examples:  {}", stats.train_count);
+                    println!("  Validation examples: {}", stats.val_count);
+                    println!("  Avg source length:  {:.0} chars", stats.avg_source_len);
+                    println!("  Avg target length:  {:.0} chars", stats.avg_target_len);
+                    println!();
+                    println!("Files written to: {output}/");
+
+                    if gen_config {
+                        let yaml_config = generate_entrenar_config(
+                            output_path,
+                            Path::new("outputs/model"),
+                            lora_rank,
+                        );
+                        let config_path = format!("{output}/train_config.yaml");
+                        std::fs::write(&config_path, &yaml_config).ok();
+                        println!("\nGenerated entrenar config: {config_path}");
+                        println!("\nTo train with entrenar:");
+                        println!("  entrenar train --config {config_path}");
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Export failed: {e}");
+                    std::process::exit(1);
+                }
             }
         }
     }

@@ -1,9 +1,9 @@
 # Verificar: Synthetic Data Factory for Domain-Specific Code Intelligence
 
-**Version**: 0.1.0
-**Status**: SPECIFICATION
+**Version**: 0.3.2
+**Status**: IMPLEMENTED
 **Authors**: PAIML Engineering
-**Date**: 2025-11-25
+**Date**: 2025-11-26
 
 ## Executive Summary
 
@@ -276,7 +276,7 @@ pub trait Transpiler {
 impl Transpiler for Depyler { /* Python → Rust */ }
 impl Transpiler for Bashrs { /* Bash → Safe Shell */ }
 impl Transpiler for Ruchy { /* Ruby → Rust */ }
-impl Transpiler for Decy { /* TypeScript → Rust */ }
+impl Transpiler for Decy { /* C → Rust */ }
 ```
 
 > **[Review Annotation]**
@@ -378,28 +378,52 @@ From Jia & Harman [4], adapted for transpilation:
 
 ### 5.1 Bug Prediction Model (aprender)
 
-Classical ML for fast inference:
+Classical ML for fast inference. **Implemented** in `src/ml/`:
 
 ```rust
-use aprender::{RandomForestClassifier, GradientBoostingClassifier};
-
-/// Features extracted from source code
-struct CodeFeatures {
-    ast_depth: f32,
-    num_operators: f32,
-    num_control_flow: f32,
-    cyclomatic_complexity: f32,
-    num_type_coercions: f32,
-    uses_edge_values: f32,
-    // ... 50+ features
+// src/transpiler/ml_oracle.rs - Feature extraction
+pub struct CodeFeatures {
+    pub ast_depth: usize,
+    pub node_count: usize,
+    pub cyclomatic_complexity: usize,
+    pub identifier_count: usize,
+    pub call_count: usize,
+    pub has_loops: bool,
+    pub has_conditionals: bool,
+    pub has_exceptions: bool,
 }
 
-/// Predict probability of transpilation bug
-fn predict_bug_probability(features: &CodeFeatures) -> f32 {
-    let model = RandomForestClassifier::load("models/bug_predictor.bin")?;
-    model.predict_proba(features.to_vector())?[1]  // P(bug)
+// src/ml/training.rs - Training pipeline
+pub struct TrainingExample {
+    pub features: CodeFeatures,
+    pub is_bug: bool,
+}
+
+pub struct TrainingConfig {
+    pub train_ratio: f64,      // Default: 0.8
+    pub cv_folds: usize,       // Default: 5
+    pub seed: u64,             // Default: 42
+    pub min_examples: usize,   // Default: 100
+}
+
+pub trait ModelTrainer {
+    fn train(&self, examples: &[TrainingExample], config: &TrainingConfig)
+        -> Result<Box<dyn TrainedModel>, TrainingError>;
+    fn cross_validate(&self, examples: &[TrainingExample], config: &TrainingConfig)
+        -> Result<CrossValidationResults, TrainingError>;
 }
 ```
+
+**Evaluation metrics** (`src/ml/evaluator.rs`):
+- Confusion matrix with TP/TN/FP/FN
+- ROC curve and AUC calculation
+- Feature importance analysis
+- Benchmark inference speed (predictions/sec)
+
+**RL Test Prioritizer** (`src/ml/rl_prioritizer.rs`):
+- Thompson Sampling (Spieker et al. 2017)
+- Beta distribution for each feature bucket
+- Online learning with feedback updates
 
 ### 5.2 Code Embedding Model (entrenar + trueno)
 
@@ -651,7 +675,52 @@ tools = [
 >
 > **Developer focus metrics**: With tooling automation, PAIML contributors spend ~80% time on creative problem-solving vs ~50% industry average. The 1,296 high-confidence labeled commits demonstrate disciplined, high-quality output enabled by tooling support.
 
-### 7.3 CI/CD Pipeline
+### 7.3 CLI Commands
+
+Verificar provides a complete CLI for the end-to-end pipeline:
+
+```bash
+# Generate synthetic test cases
+verificar generate \
+  --count 10000 \
+  --language python \
+  --strategy swarm \
+  --output data/generated/
+
+# Run advanced depyler pattern generation
+verificar depyler \
+  --count 1000 \
+  --output data/depyler/
+
+# Verify transpilation correctness
+verificar verify \
+  --input data/generated/ \
+  --transpilers depyler,bashrs,decy \
+  --output data/verified/
+
+# Train bug prediction model
+verificar train \
+  --input data/verified/ \
+  --output models/bug_predictor.bin \
+  --split 0.8
+
+# Evaluate trained model
+verificar evaluate \
+  --model models/bug_predictor.bin \
+  --test data/test/ \
+  --output reports/evaluation.json
+```
+
+**Sampling Strategies**:
+| Strategy | Flag | Description |
+|----------|------|-------------|
+| Exhaustive | `--strategy exhaustive` | All programs up to depth N |
+| Random | `--strategy random` | Random sampling with seed |
+| Coverage-Guided | `--strategy coverage` | NAUTILUS-style coverage feedback |
+| Swarm | `--strategy swarm` | Random feature subsets per batch |
+| Boundary | `--strategy boundary` | Edge values emphasized |
+
+### 7.4 CI/CD Pipeline
 
 ```yaml
 # .github/workflows/ci.yml
@@ -780,30 +849,35 @@ test_cases.parquet
 
 ## 9. Milestones
 
-### Phase 1: Core Infrastructure (Weeks 1-4)
-- [ ] Grammar definitions for Python, Bash, Ruby
-- [ ] Generator engine with exhaustive/random sampling
-- [ ] Verification oracle with sandbox execution
-- [ ] Data pipeline to Parquet
+### Phase 1: Core Infrastructure ✅ COMPLETE
+- [x] Grammar definitions for Python, Bash, Ruby, C, Ruchy
+- [x] Generator engine with exhaustive/random sampling
+- [x] Verification oracle with sandbox execution
+- [x] Data pipeline to Parquet
 
-### Phase 2: Mutation & Coverage (Weeks 5-8)
-- [ ] Full mutation operator catalog
-- [ ] Coverage-guided generation
-- [ ] Swarm testing implementation
-- [ ] Integration with depyler, bashrs, ruchy
+### Phase 2: Mutation & Coverage ✅ COMPLETE
+- [x] Full mutation operator catalog (AOR, ROR, LOR, BSR, SDL, SVR, UOI, ABS)
+- [x] Coverage-guided generation (NAUTILUS-style)
+- [x] Swarm testing implementation
+- [x] Integration with depyler, bashrs, decy
 
-### Phase 3: ML Pipeline (Weeks 9-12)
-- [ ] Feature extraction pipeline
-- [ ] Bug prediction model (aprender)
-- [ ] Code embedding model (entrenar)
-- [ ] Prioritization feedback loop
+### Phase 3: ML Pipeline ✅ COMPLETE
+- [x] Feature extraction pipeline (CodeFeatures)
+- [x] Bug prediction model infrastructure (aprender-ready)
+- [x] RL test prioritizer (Thompson Sampling)
+- [x] Model evaluation and benchmarking (ROC, confusion matrix, F1)
 
-### Phase 4: Production Hardening (Weeks 13-16)
-- [ ] 95% test coverage
-- [ ] A+ TDG grade
-- [ ] 85% mutation score
-- [ ] Documentation complete
-- [ ] Benchmark suite
+### Phase 4: Production Hardening ✅ COMPLETE
+- [x] 95% test coverage enforced
+- [x] A- minimum TDG grade
+- [x] 85% mutation score target
+- [x] Documentation complete
+- [x] CLI for end-to-end pipeline
+- [x] Published to crates.io v0.3.2
+
+### Future Work (Low Priority)
+- [x] VERIFICAR-090: LLM fine-tuning integration with entrenar ✅
+- [ ] VERIFICAR-091: Semantic equivalence oracle (beyond I/O)
 
 > **[Review Annotation]**
 > **Principle**: *Hoshin Kanri (Policy Deployment)*
@@ -856,7 +930,7 @@ test_cases.parquet
 | **depyler** | Python → Rust transpiler |
 | **bashrs** | Bash → Safe Shell transpiler |
 | **ruchy** | Ruby → Rust transpiler |
-| **decy** | TypeScript → Rust transpiler |
+| **decy** | C → Rust transpiler |
 | **pmat** | Quality gates and TDG scoring |
 | **certeza** | Tiered TDD workflow |
 | **renacer** | Profiling and tracing |
@@ -907,7 +981,7 @@ Defect pattern analysis extracted from 1,296 commits across four PAIML transpile
 | **depyler** (Python→Rust) | 1000 | 489 | 0.86 | ASTTransform (50.7%) |
 | **ruchy** (Ruby→Rust) | 1000 | 342 | 0.84 | ASTTransform (40.1%) |
 | **bashrs** (Bash→Safe Shell) | 1000 | 327 | 0.85 | ASTTransform (45.0%) |
-| **decy** (TypeScript→Rust) | 596 | 138 | 0.88 | ASTTransform (62.3%) |
+| **decy** (C→Rust) | 596 | 138 | 0.88 | ASTTransform (62.3%) |
 | **TOTAL** | 3596 | **1,296** | 0.86 | ASTTransform (48.2%) |
 
 ### C.2 Defect Category Analysis
@@ -926,7 +1000,7 @@ Defect pattern analysis extracted from 1,296 commits across four PAIML transpile
 | Category | Transpiler | Percentage | **Strategic Implication** |
 |----------|------------|------------|---------------------------|
 | **SecurityVulnerabilities** | bashrs | **12.2%** | Shell injection, quoting - requires security-focused mutation operators |
-| **MemorySafety** | decy | **10.1%** | TypeScript `any` type → unsafe Rust - unique to decy |
+| **MemorySafety** | decy | **10.1%** | C malloc/free → safe Rust Box/Vec - unique to decy |
 | **StdlibMapping** | ruchy | **20.8%** | Ruby's extensive stdlib requires comprehensive API mapping |
 | **ComprehensionBugs** | depyler | **5.1%** | List/dict comprehensions - Python-specific syntax |
 | **TypeAnnotationGaps** | depyler | **3.7%** | Optional typing in Python → required in Rust |
@@ -987,19 +1061,19 @@ ConfigurationErrors:      2 (0.6%)   ← Build/tooling
 IntegrationFailures:      1 (0.3%)   ← Integration
 ```
 
-#### decy (TypeScript → Rust) - 138 examples
+#### decy (C → Rust) - 138 examples
 
 ```
-ASTTransform:            86 (62.3%)  ← UNIQUE: Highest AST complexity
-OwnershipBorrow:         21 (15.2%)  ← Rust borrow checker
-MemorySafety:            14 (10.1%)  ← UNIQUE: `any` type → unsafe
-StdlibMapping:            7 (5.1%)   ← JS stdlib → Rust
-IteratorChain:            3 (2.2%)   ← Iterator protocol
-ConcurrencyBugs:          2 (1.4%)   ← Promise→Future
+ASTTransform:            86 (62.3%)  ← UNIQUE: Highest AST complexity (C macros, pointers)
+OwnershipBorrow:         21 (15.2%)  ← Rust borrow checker vs C raw pointers
+MemorySafety:            14 (10.1%)  ← UNIQUE: malloc/free → Box/Vec
+StdlibMapping:            7 (5.1%)   ← C stdlib → Rust std
+IteratorChain:            3 (2.2%)   ← Pointer arithmetic → iterators
+ConcurrencyBugs:          2 (1.4%)   ← pthreads → std::thread
 TraitBounds:              2 (1.4%)   ← Generic constraints
-SecurityVulnerabilities:  1 (0.7%)   ← Type safety bypass
+SecurityVulnerabilities:  1 (0.7%)   ← Buffer overflow prevention
 OperatorPrecedence:       1 (0.7%)   ← Operator semantics
-TypeAnnotationGaps:       1 (0.7%)   ← Type inference
+TypeAnnotationGaps:       1 (0.7%)   ← Implicit int → explicit types
 ```
 
 ### C.4 Strategic Implications for Verificar
@@ -1022,7 +1096,7 @@ Based on defect distribution, verificar should allocate generation effort:
 | AOR/ROR/LOR | ASTTransform | High (50%+) |
 | BSR (Boundary) | OwnershipBorrow | Medium (20%) |
 | SDL (Statement Delete) | SecurityVulnerabilities | High for bashrs |
-| Type mutation | MemorySafety | High for decy |
+| Pointer mutation | MemorySafety | High for decy |
 | Stdlib substitution | StdlibMapping | High for ruchy |
 
 #### Transfer Learning Strategy

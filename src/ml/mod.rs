@@ -13,12 +13,17 @@
 //! - **trueno**: SIMD-accelerated tensor operations
 
 mod aprender;
+mod entrenar;
 mod evaluator;
 mod rl_prioritizer;
 mod trainer;
 mod training;
 
 pub use self::aprender::AprenderBugPredictor;
+pub use self::entrenar::{
+    generate_entrenar_config, CodeTranslationExample, EntrenarExporter, ExportConfig,
+    ExportFormat, ExportStats, PromptTemplate,
+};
 pub use self::evaluator::{
     benchmark_inference, calculate_feature_importance, BenchmarkResult, ComparisonMetrics,
     ConfusionMatrix, FeatureImportance, ModelComparison, RocCurve, RocPoint,
