@@ -1,0 +1,12 @@
+[package]
+name = "test_016_exit_exception_handling"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "test_016_exit_exception_handling"
+path = "test_016_exit_exception_handling.rs"
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
