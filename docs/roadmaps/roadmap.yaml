@@ -193,11 +193,11 @@ roadmap:
   github_issue: null
   item_type: task
   title: Integrate with bashrs transpiler
-  status: planned
+  status: completed
   priority: medium
   assigned_to: null
   created: 1970-01-01T00:00:00Z
-  updated: 1970-01-01T00:00:00Z
+  updated: 2025-11-26T11:36:59.378359752+00:00
   spec: null
   acceptance_criteria:
   - BashrsTranspiler trait implementation
