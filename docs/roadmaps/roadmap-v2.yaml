@@ -98,7 +98,7 @@ roadmap:
   - pipeline
   - performance
   - data
-  notes: Critical path for ML training - need large datasets
+  notes: Critical path for ML training. BLOCKER - alimentar v0.1.0 is scaffold only, need data loading infrastructure first.
 
 - id: VERIFICAR-051
   github_issue: null
@@ -224,6 +224,30 @@ roadmap:
   - integration
   notes: Grammar already implemented (VERIFICAR-013), need full integration
 
+- id: VERIFICAR-062
+  github_issue: null
+  item_type: task
+  title: Validate depyler with advanced pattern corpus
+  status: in_progress
+  priority: high
+  assigned_to: null
+  created: 1970-01-01T00:00:00Z
+  updated: 1970-01-01T00:00:00Z
+  spec: null
+  acceptance_criteria:
+  - Run AdvancedDepylerPatternGenerator against depyler v3.20.0
+  - Track compilation success rate (target >90%)
+  - Identify remaining type inference gaps
+  - Generate regression test corpus
+  phases: []
+  subtasks: []
+  estimated_effort: 4-6 hours
+  labels:
+  - transpiler
+  - depyler
+  - validation
+  notes: Leverages DEPYLER-0523→0527 fixes. AdvancedDepylerPatternGenerator ready in v0.3.2.
+
 # Phase 4: Performance and Scale
 - id: VERIFICAR-070
   github_issue: null
@@ -300,25 +324,24 @@ roadmap:
   github_issue: null
   item_type: task
   title: Package and publish to crates.io
-  status: planned
+  status: done
   priority: medium
   assigned_to: null
   created: 1970-01-01T00:00:00Z
   updated: 1970-01-01T00:00:00Z
   spec: null
   acceptance_criteria:
-  - Published to crates.io as verificar v0.4.0
-  - Complete README with quickstart
-  - API documentation (docs.rs)
-  - CHANGELOG with all v0.4.0 features
-  - CI badge (GitHub Actions)
+  - Published to crates.io as verificar v0.3.2 ✅
+  - Complete README with quickstart ✅
+  - API documentation (docs.rs) ✅
+  - CHANGELOG with version history ✅
   phases: []
   subtasks: []
   estimated_effort: 4-6 hours
   labels:
   - release
   - documentation
-  notes: v0.4.0 with complete ML training pipeline
+  notes: v0.3.2 published 2025-11-25 with advanced depyler patterns
 
 # Phase 6: Advanced Features (Future)
 - id: VERIFICAR-090
