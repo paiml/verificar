@@ -272,7 +272,7 @@ impl KMeansClustering {
         let actual_k = self.k.min(embeddings.len());
 
         // Initialize centroids (k-means++ style)
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut centroids = self.init_centroids(embeddings, actual_k, &mut rng);
 
         let mut assignments = vec![0usize; embeddings.len()];
@@ -339,7 +339,7 @@ impl KMeansClustering {
         let mut centroids = Vec::with_capacity(k);
 
         // First centroid: random
-        let first_idx = rng.gen_range(0..embeddings.len());
+        let first_idx = rng.random_range(0..embeddings.len());
         centroids.push(embeddings[first_idx].clone());
 
         // K-means++: choose remaining centroids proportional to squared distance
@@ -360,7 +360,7 @@ impl KMeansClustering {
                 break;
             }
 
-            let threshold = rng.gen::<f32>() * total;
+            let threshold = rng.random::<f32>() * total;
             let mut cumsum = 0.0;
             for (i, &d) in distances.iter().enumerate() {
                 cumsum += d;
@@ -542,13 +542,18 @@ impl ActiveLearner {
     /// Sample cluster using Thompson Sampling
     ///
     /// Returns cluster ID with high expected value (exploration vs exploitation)
+    ///
+    /// # Panics
+    ///
+    /// Panics if Beta distribution creation fails with default parameters (1.0, 1.0),
+    /// which should never happen for valid alpha/beta values.
     pub fn sample_cluster(&self) -> Option<usize> {
         let result = self.cluster_result.as_ref()?;
         if result.clusters.is_empty() {
             return None;
         }
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Sample from Beta distribution for each cluster
         let scores: Vec<(usize, f64)> = result
@@ -561,7 +566,8 @@ impl ActiveLearner {
 
                 // Sample from Beta distribution
                 #[allow(clippy::unwrap_used)]
-                let beta_dist = Beta::new(alpha, beta).unwrap_or_else(|_| Beta::new(1.0, 1.0).unwrap());
+                let beta_dist =
+                    Beta::new(alpha, beta).unwrap_or_else(|_| Beta::new(1.0, 1.0).unwrap());
                 let score = beta_dist.sample(&mut rng);
 
                 (c.id, score)
@@ -583,12 +589,11 @@ impl ActiveLearner {
             return vec![];
         }
 
-        let result = match &self.cluster_result {
-            Some(r) => r,
-            None => return (0..batch_size.min(codes.len())).collect(),
+        let Some(_result) = &self.cluster_result else {
+            return (0..batch_size.min(codes.len())).collect();
         };
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut selected = Vec::with_capacity(batch_size);
         let mut remaining: Vec<usize> = (0..codes.len()).collect();
 
@@ -608,12 +613,12 @@ impl ActiveLearner {
 
             if in_cluster.is_empty() {
                 // Fallback: random selection
-                let idx = rng.gen_range(0..remaining.len());
+                let idx = rng.random_range(0..remaining.len());
                 let sample_idx = remaining.remove(idx);
                 selected.push(sample_idx);
             } else {
                 // Select from target cluster
-                let idx = rng.gen_range(0..in_cluster.len());
+                let idx = rng.random_range(0..in_cluster.len());
                 let sample_idx = in_cluster[idx];
                 remaining.retain(|&x| x != sample_idx);
                 selected.push(sample_idx);
@@ -663,12 +668,9 @@ impl ActiveLearner {
                         ClusterStats {
                             cluster_id: c.id,
                             size: c.size,
-                            bug_rate: if total > 0.0 {
-                                failures / total
-                            } else {
-                                0.5
-                            },
-                            samples_tried: total as usize,
+                            bug_rate: if total > 0.0 { failures / total } else { 0.5 },
+                            #[allow(clippy::cast_sign_loss)]
+                            samples_tried: total.max(0.0) as usize,
                         }
                     })
                     .collect()
@@ -679,8 +681,8 @@ impl ActiveLearner {
     /// Check if exploration should be prioritized
     #[must_use]
     pub fn should_explore(&self) -> bool {
-        let mut rng = rand::thread_rng();
-        rng.gen::<f64>() < self.exploration_rate
+        let mut rng = rand::rng();
+        rng.random::<f64>() < self.exploration_rate
     }
 
     /// Get total samples processed

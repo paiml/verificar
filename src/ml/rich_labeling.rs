@@ -67,15 +67,15 @@ impl ErrorCategory {
     #[must_use]
     pub fn severity(&self) -> f32 {
         match self {
-            Self::PanicDivergence => 1.0,      // Critical: silent failures
-            Self::OwnershipViolation => 0.9,  // Rust-specific complexity
-            Self::LifetimeError => 0.85,      // Rust-specific complexity
-            Self::TypeMismatch => 0.8,        // Common transpilation issue
-            Self::OutputMismatch => 0.7,      // Semantic error
-            Self::RuntimeError => 0.6,        // Detectable at runtime
-            Self::CompilationError => 0.5,    // Detectable at compile time
-            Self::ResourceExhaustion => 0.3,  // Often environment-specific
-            Self::Unknown => 0.2,             // Needs investigation
+            Self::PanicDivergence => 1.0,    // Critical: silent failures
+            Self::OwnershipViolation => 0.9, // Rust-specific complexity
+            Self::LifetimeError => 0.85,     // Rust-specific complexity
+            Self::TypeMismatch => 0.8,       // Common transpilation issue
+            Self::OutputMismatch => 0.7,     // Semantic error
+            Self::RuntimeError => 0.6,       // Detectable at runtime
+            Self::CompilationError => 0.5,   // Detectable at compile time
+            Self::ResourceExhaustion => 0.3, // Often environment-specific
+            Self::Unknown => 0.2,            // Needs investigation
         }
     }
 
@@ -138,10 +138,7 @@ impl ErrorCategory {
         }
 
         // Runtime errors
-        if msg.contains("runtime")
-            || msg.contains("overflow")
-            || msg.contains("division by zero")
-        {
+        if msg.contains("runtime") || msg.contains("overflow") || msg.contains("division by zero") {
             return Self::RuntimeError;
         }
 
@@ -398,7 +395,11 @@ impl RichLabel {
         features.push(self.execution_metrics.source_time_ms as f32 / 1000.0);
         features.push(self.execution_metrics.target_time_ms as f32 / 1000.0);
         features.push(self.execution_metrics.memory_bytes as f32 / 1_000_000.0);
-        features.push(if self.execution_metrics.timeout { 1.0 } else { 0.0 });
+        features.push(if self.execution_metrics.timeout {
+            1.0
+        } else {
+            0.0
+        });
 
         features
     }
@@ -563,7 +564,10 @@ mod tests {
     #[test]
     fn test_error_category_severity() {
         assert!(ErrorCategory::PanicDivergence.severity() > ErrorCategory::Unknown.severity());
-        assert!(ErrorCategory::OwnershipViolation.severity() > ErrorCategory::CompilationError.severity());
+        assert!(
+            ErrorCategory::OwnershipViolation.severity()
+                > ErrorCategory::CompilationError.severity()
+        );
     }
 
     #[test]
@@ -862,14 +866,7 @@ mod tests {
     #[test]
     fn test_label_extractor_incorrect() {
         let extractor = LabelExtractor::new();
-        let label = extractor.extract(
-            false,
-            Some("type mismatch error"),
-            "5",
-            "6",
-            100,
-            100,
-        );
+        let label = extractor.extract(false, Some("type mismatch error"), "5", "6", 100, 100);
 
         assert!(!label.is_correct);
         assert_eq!(label.error_category, Some(ErrorCategory::TypeMismatch));

@@ -83,7 +83,7 @@ impl RLTestPrioritizer {
     ///
     /// Returns indices sorted by priority (highest failure probability first)
     pub fn prioritize(&self, features: &[CodeFeatures]) -> Vec<usize> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut scored: Vec<(usize, f64)> = features
             .iter()

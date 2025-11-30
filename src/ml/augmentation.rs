@@ -90,16 +90,16 @@ impl CodeEDA {
     fn apply_augmentations(&mut self, code: &str) -> String {
         let mut result = code.to_string();
 
-        if self.rng.gen::<f32>() < self.config.sr_prob {
+        if self.rng.random::<f32>() < self.config.sr_prob {
             result = self.synonym_replacement(&result);
         }
-        if self.rng.gen::<f32>() < self.config.ri_prob {
+        if self.rng.random::<f32>() < self.config.ri_prob {
             result = self.random_insertion(&result);
         }
-        if self.rng.gen::<f32>() < self.config.rs_prob {
+        if self.rng.random::<f32>() < self.config.rs_prob {
             result = self.random_swap(&result);
         }
-        if self.rng.gen::<f32>() < self.config.rd_prob {
+        if self.rng.random::<f32>() < self.config.rd_prob {
             result = self.random_deletion(&result);
         }
 
@@ -116,7 +116,7 @@ impl CodeEDA {
         // Pick a random variable to rename (sorted for determinism)
         let mut var_list: Vec<_> = variables.into_iter().collect();
         var_list.sort();
-        let idx = self.rng.gen_range(0..var_list.len());
+        let idx = self.rng.random_range(0..var_list.len());
         let old_var = &var_list[idx];
 
         // Generate new name
@@ -133,8 +133,8 @@ impl CodeEDA {
             return code.to_string();
         }
 
-        let insert_idx = self.rng.gen_range(0..=lines.len());
-        let insert_type = self.rng.gen_range(0..3);
+        let insert_idx = self.rng.random_range(0..=lines.len());
+        let insert_type = self.rng.random_range(0..3);
 
         let insertion = match insert_type {
             0 => "    # augmented".to_string(),
@@ -160,7 +160,7 @@ impl CodeEDA {
             return code.to_string();
         }
 
-        let (i, j) = swappable[self.rng.gen_range(0..swappable.len())];
+        let (i, j) = swappable[self.rng.random_range(0..swappable.len())];
         let mut result_lines: Vec<String> = lines.iter().map(|s| (*s).to_string()).collect();
         result_lines.swap(i, j);
         result_lines.join("\n")
@@ -188,7 +188,7 @@ impl CodeEDA {
             return code.to_string();
         }
 
-        let del_idx = deletable[self.rng.gen_range(0..deletable.len())];
+        let del_idx = deletable[self.rng.random_range(0..deletable.len())];
         let result_lines: Vec<&str> = lines
             .iter()
             .enumerate()
@@ -228,7 +228,7 @@ impl CodeEDA {
     /// Generate a new variable name based on old one
     fn generate_variable_name(&mut self, old: &str) -> String {
         let suffixes = ["_new", "_v2", "_alt", "_mod", "2"];
-        let suffix = suffixes[self.rng.gen_range(0..suffixes.len())];
+        let suffix = suffixes[self.rng.random_range(0..suffixes.len())];
         format!("{old}{suffix}")
     }
 
@@ -400,9 +400,10 @@ fn is_valid_identifier(s: &str) -> bool {
     if s.is_empty() {
         return false;
     }
-    let first = s.chars().next().unwrap();
-    (first.is_alphabetic() || first == '_')
-        && s.chars().all(|c| c.is_alphanumeric() || c == '_')
+    let Some(first) = s.chars().next() else {
+        return false;
+    };
+    (first.is_alphabetic() || first == '_') && s.chars().all(|c| c.is_alphanumeric() || c == '_')
 }
 
 /// Check if string is a Python keyword
@@ -480,7 +481,8 @@ impl BatchAugmenter {
 
     /// Augment a batch of code samples
     pub fn augment_batch(&mut self, samples: &[String]) -> Vec<AugmentationResult> {
-        let n_aug = (self.factor as usize).max(1);
+        #[allow(clippy::cast_sign_loss)]
+        let n_aug = (self.factor.max(0.0) as usize).max(1);
 
         samples
             .iter()
@@ -995,11 +997,10 @@ mod tests {
     #[test]
     fn test_all_python_keywords() {
         let keywords = [
-            "False", "None", "True", "and", "as", "assert", "async", "await",
-            "break", "class", "continue", "def", "del", "elif", "else", "except",
-            "finally", "for", "from", "global", "if", "import", "in", "is",
-            "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try",
-            "while", "with", "yield",
+            "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
+            "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global",
+            "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise",
+            "return", "try", "while", "with", "yield",
         ];
         for kw in keywords {
             assert!(is_keyword(kw), "{kw} should be a keyword");

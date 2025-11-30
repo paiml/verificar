@@ -148,7 +148,10 @@ impl FeatureExtractor {
                 current.push(ch);
             } else {
                 if !current.is_empty()
-                    && current.chars().next().is_some_and(|c| c.is_alphabetic() || c == '_')
+                    && current
+                        .chars()
+                        .next()
+                        .is_some_and(|c| c.is_alphabetic() || c == '_')
                 {
                     identifiers.insert(current.clone());
                 }
@@ -306,12 +309,12 @@ impl QualityGate {
         for (i, &val) in arr.iter().enumerate() {
             // Normalize features to [0, 1] range approximately
             let normalized = match i {
-                0 => (val / 100.0).min(1.0),           // loc: normalize by 100
-                1 => (val / 10.0).min(1.0),            // ast_depth: normalize by 10
-                2 => (val / 50.0).min(1.0),            // identifiers: normalize by 50
-                3 => (val / 20.0).min(1.0),            // complexity: normalize by 20
-                4..=6 => val,                          // booleans already 0/1
-                7 => val,                              // ratio already 0-1
+                0 => (val / 100.0).min(1.0), // loc: normalize by 100
+                1 => (val / 10.0).min(1.0),  // ast_depth: normalize by 10
+                2 => (val / 50.0).min(1.0),  // identifiers: normalize by 50
+                3 => (val / 20.0).min(1.0),  // complexity: normalize by 20
+                4..=6 => val,                // booleans already 0/1
+                7 => val,                    // ratio already 0-1
                 _ => val,
             };
             score += self.weights[i] * normalized;
@@ -343,10 +346,7 @@ impl QualityGate {
     }
 
     /// Batch evaluate and return passing codes
-    pub fn filter_batch<'a>(
-        &mut self,
-        codes: &'a [GeneratedCode],
-    ) -> Vec<&'a GeneratedCode> {
+    pub fn filter_batch<'a>(&mut self, codes: &'a [GeneratedCode]) -> Vec<&'a GeneratedCode> {
         let extractor = FeatureExtractor::new();
 
         codes

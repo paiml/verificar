@@ -658,7 +658,11 @@ fn main() {
             println!("Input:       {input}");
             println!("Output:      {output}");
             println!("Temperature: {temperature}");
-            println!("Alpha:       {alpha} (distill={:.0}%, hard={:.0}%)", alpha * 100.0, (1.0 - alpha) * 100.0);
+            println!(
+                "Alpha:       {alpha} (distill={:.0}%, hard={:.0}%)",
+                alpha * 100.0,
+                (1.0 - alpha) * 100.0
+            );
             println!("Teachers:    {num_teachers}");
             println!("Epochs:      {epochs}");
             println!();
@@ -737,7 +741,11 @@ fn main() {
             });
 
             let model_path = format!("{output}/distilled_model.json");
-            std::fs::write(&model_path, serde_json::to_string_pretty(&model_info).unwrap()).ok();
+            std::fs::write(
+                &model_path,
+                serde_json::to_string_pretty(&model_info).unwrap(),
+            )
+            .ok();
 
             // Write distillation config for entrenar
             let distill_config = format!(
@@ -772,8 +780,10 @@ data:
             println!();
             println!("Distillation Summary:");
             println!("  Final loss:    {:.4}", losses.last().unwrap_or(&0.0));
-            println!("  Loss reduction: {:.1}%",
-                (1.0 - losses.last().unwrap_or(&1.0) / losses.first().unwrap_or(&1.0)) * 100.0);
+            println!(
+                "  Loss reduction: {:.1}%",
+                (1.0 - losses.last().unwrap_or(&1.0) / losses.first().unwrap_or(&1.0)) * 100.0
+            );
             println!();
             println!("Next steps:");
             println!("  1. Provide teacher model logits in {input}/");
@@ -825,10 +835,13 @@ data:
                 let generator = Generator::new(Language::Python);
                 let programs = generator.generate_coverage_guided(count, 4, seed);
 
-                let seeds: Vec<String> = programs.into_iter().map(|p| {
-                    pb.inc(1);
-                    p.code
-                }).collect();
+                let seeds: Vec<String> = programs
+                    .into_iter()
+                    .map(|p| {
+                        pb.inc(1);
+                        p.code
+                    })
+                    .collect();
 
                 pb.finish_with_message("Generation complete");
 
@@ -930,7 +943,11 @@ data:
                     "note": "Full training requires aprender #76 (CodeEDA) and #77 (CommitFeatures)"
                 });
                 let model_path = format!("{output}/model.json");
-                std::fs::write(&model_path, serde_json::to_string_pretty(&model_info).unwrap()).ok();
+                std::fs::write(
+                    &model_path,
+                    serde_json::to_string_pretty(&model_info).unwrap(),
+                )
+                .ok();
                 println!("  Model saved to {model_path}");
             } else {
                 println!("Stage 3: Skipped");
@@ -955,10 +972,13 @@ data:
                 // (In production, these would be verified by the oracle)
                 for (i, code) in augmented_programs.iter().enumerate() {
                     let tuple = VerifiedTuple {
-                        source_language: verificar::Language::Python,
-                        target_language: verificar::Language::Rust,
+                        source_language: Language::Python,
+                        target_language: Language::Rust,
                         source_code: code.clone(),
-                        target_code: format!("// Placeholder Rust for: {}", &code[..code.len().min(30)]),
+                        target_code: format!(
+                            "// Placeholder Rust for: {}",
+                            &code[..code.len().min(30)]
+                        ),
                         is_correct: true, // Placeholder - would be verified
                         execution_time_ms: 0,
                     };
@@ -988,8 +1008,8 @@ data:
                 // Set metadata
                 let metadata = CorpusMetadata {
                     version: env!("CARGO_PKG_VERSION").to_string(),
-                    source_language: verificar::Language::Python,
-                    target_language: verificar::Language::Rust,
+                    source_language: Language::Python,
+                    target_language: Language::Rust,
                     count: corpus_manager.corpus().tuples.len(),
                     correct_count: corpus_manager.corpus().metadata.correct_count,
                     incorrect_count: corpus_manager.corpus().metadata.incorrect_count,
@@ -1002,7 +1022,9 @@ data:
 
                 // Export corpus
                 let corpus_path = Path::new(&output).join("corpus.jsonl");
-                corpus_manager.export(&corpus_path, CorpusFormat::Jsonl).ok();
+                corpus_manager
+                    .export(&corpus_path, CorpusFormat::Jsonl)
+                    .ok();
 
                 // Export training-ready data
                 let (features, labels) = corpus_manager.to_training_data();
@@ -1016,18 +1038,34 @@ data:
                     ]
                 });
                 let training_path = Path::new(&output).join("training_data.json");
-                std::fs::write(&training_path, serde_json::to_string(&training_data).unwrap()).ok();
+                std::fs::write(
+                    &training_path,
+                    serde_json::to_string(&training_data).unwrap(),
+                )
+                .ok();
 
-                println!("  Corpus: {} tuples -> {}", corpus_manager.corpus().tuples.len(), corpus_path.display());
-                println!("  Training data: {} samples -> {}", features.len(), training_path.display());
+                println!(
+                    "  Corpus: {} tuples -> {}",
+                    corpus_manager.corpus().tuples.len(),
+                    corpus_path.display()
+                );
+                println!(
+                    "  Training data: {} samples -> {}",
+                    features.len(),
+                    training_path.display()
+                );
             } else if corpus {
                 println!("Stage 4: Skipped (no programs to export)");
             }
 
             println!();
-            let n_seeds = if run_generate && input == "generate" { count } else { 0 };
+            let n_seeds = if run_generate && input == "generate" {
+                count
+            } else {
+                0
+            };
             println!("Pipeline Summary:");
-            println!("  Seeds:     {}", n_seeds);
+            println!("  Seeds:     {n_seeds}");
             println!("  Augmented: {}", augmented_programs.len());
             println!("  Output:    {output}/");
             if corpus {
@@ -1066,7 +1104,11 @@ data:
             println!("Output:   {output}");
             println!("Format:   {format}");
             println!("Template: {template}");
-            println!("Split:    {:.0}% train / {:.0}% val", split * 100.0, (1.0 - split) * 100.0);
+            println!(
+                "Split:    {:.0}% train / {:.0}% val",
+                split * 100.0,
+                (1.0 - split) * 100.0
+            );
             println!();
 
             let input_path = Path::new(&input);
@@ -1108,16 +1150,14 @@ data:
             let exporter = EntrenarExporter::new(config);
 
             // For now, create sample data (actual implementation would load from input)
-            let sample_tuples = vec![
-                verificar::data::VerifiedTuple {
-                    source_language: Language::Python,
-                    target_language: Language::Rust,
-                    source_code: "def add(a: int, b: int) -> int:\n    return a + b".to_string(),
-                    target_code: "fn add(a: i32, b: i32) -> i32 {\n    a + b\n}".to_string(),
-                    is_correct: true,
-                    execution_time_ms: 10,
-                },
-            ];
+            let sample_tuples = vec![verificar::data::VerifiedTuple {
+                source_language: Language::Python,
+                target_language: Language::Rust,
+                source_code: "def add(a: int, b: int) -> int:\n    return a + b".to_string(),
+                target_code: "fn add(a: i32, b: i32) -> i32 {\n    a + b\n}".to_string(),
+                is_correct: true,
+                execution_time_ms: 10,
+            }];
 
             let output_path = Path::new(&output);
             match exporter.export(&sample_tuples, output_path) {

@@ -68,6 +68,8 @@ pub enum Language {
     Bash,
     /// C (decy source → Rust)
     C,
+    /// TypeScript (decy target for C → TypeScript)
+    TypeScript,
     /// Ruchy (standalone language)
     Ruchy,
     /// Rust (common target language)
@@ -80,6 +82,7 @@ impl std::fmt::Display for Language {
             Self::Python => write!(f, "python"),
             Self::Bash => write!(f, "bash"),
             Self::C => write!(f, "c"),
+            Self::TypeScript => write!(f, "typescript"),
             Self::Ruchy => write!(f, "ruchy"),
             Self::Rust => write!(f, "rust"),
         }
@@ -113,6 +116,11 @@ mod tests {
     #[test]
     fn test_language_display_rust() {
         assert_eq!(format!("{}", Language::Rust), "rust");
+    }
+
+    #[test]
+    fn test_language_display_typescript() {
+        assert_eq!(format!("{}", Language::TypeScript), "typescript");
     }
 
     #[test]

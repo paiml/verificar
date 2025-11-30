@@ -126,7 +126,11 @@ impl SemanticNode {
     /// Count total nodes in tree
     #[must_use]
     pub fn node_count(&self) -> usize {
-        1 + self.children.iter().map(SemanticNode::node_count).sum::<usize>()
+        1 + self
+            .children
+            .iter()
+            .map(SemanticNode::node_count)
+            .sum::<usize>()
     }
 
     /// Calculate tree depth
@@ -225,7 +229,9 @@ impl AstSemanticOracle {
     /// Create a new AST semantic oracle
     #[must_use]
     pub fn new(similarity_threshold: f64) -> Self {
-        Self { similarity_threshold }
+        Self {
+            similarity_threshold,
+        }
     }
 
     /// Parse code into semantic AST (placeholder)
@@ -312,7 +318,10 @@ impl FormalVerificationOracle {
     /// Create a new formal verification oracle
     #[must_use]
     pub fn new(max_bound: usize, timeout_ms: u64) -> Self {
-        Self { max_bound, timeout_ms }
+        Self {
+            max_bound,
+            timeout_ms,
+        }
     }
 
     /// Encode program as SMT formula (placeholder)
@@ -471,17 +480,17 @@ mod tests {
         assert_eq!(node.node_type, "function");
         assert_eq!(node.value, Some("add".to_string()));
         assert_eq!(node.children.len(), 2);
-        assert_eq!(node.annotations.get("return_type"), Some(&"int".to_string()));
+        assert_eq!(
+            node.annotations.get("return_type"),
+            Some(&"int".to_string())
+        );
     }
 
     #[test]
     fn test_semantic_node_count() {
         let node = SemanticNode::new("root")
             .with_child(SemanticNode::new("child1"))
-            .with_child(
-                SemanticNode::new("child2")
-                    .with_child(SemanticNode::new("grandchild")),
-            );
+            .with_child(SemanticNode::new("child2").with_child(SemanticNode::new("grandchild")));
 
         assert_eq!(node.node_count(), 4);
     }
@@ -490,10 +499,7 @@ mod tests {
     fn test_semantic_node_depth() {
         let node = SemanticNode::new("root")
             .with_child(SemanticNode::new("child1"))
-            .with_child(
-                SemanticNode::new("child2")
-                    .with_child(SemanticNode::new("grandchild")),
-            );
+            .with_child(SemanticNode::new("child2").with_child(SemanticNode::new("grandchild")));
 
         assert_eq!(node.depth(), 3);
     }

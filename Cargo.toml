@@ -59,7 +59,7 @@ match_same_arms = "allow"
 
 [package]
 name = "verificar"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Pragmatic AI Labs"]
@@ -90,31 +90,32 @@ parquet = { version = "57.0", optional = true }
 arrow = { version = "57.0", optional = true }
 
 # Random number generation for sampling
-rand = "0.8"
-rand_distr = "0.4"
+rand = "0.9"
+rand_distr = "0.5"
 
 # Parallelization for generation
 rayon = "1.10"
 
 # Progress tracking
-indicatif = "0.17"
+indicatif = "0.18"
 
 # UUID for test case IDs
 uuid = { version = "1.11", features = ["v4", "serde"] }
 
 # Core compute primitives - SIMD-accelerated tensor operations
-trueno = "0.7"
+trueno = "0.7.3"
 
 # Machine learning for bug prediction (optional)
-aprender = { version = "0.9", optional = true }
+aprender = { version = "0.14", optional = true }
 
 # LLM fine-tuning integration (optional)
-entrenar = { version = "0.1", optional = true }
+entrenar = { version = "0.2", optional = true }
 
 # Tree-sitter for grammar parsing (optional)
 tree-sitter = { version = "0.25", optional = true }
 tree-sitter-python = { version = "0.25", optional = true }
 tree-sitter-c = { version = "0.24", optional = true }
+tree-sitter-typescript = { version = "0.23", optional = true }
 
 # Pest for PEG grammars (optional)
 pest = { version = "2.7", optional = true }
@@ -122,14 +123,14 @@ pest_derive = { version = "2.7", optional = true }
 
 [dev-dependencies]
 proptest = "1.6"
-criterion = "0.5"
-# renacer = "0.6"  # Temporarily disabled due to arrow version conflict
+criterion = "0.6"
+renacer = "0.7"
 tempfile = "3.14"
 
 [features]
 default = []
 parquet = ["dep:parquet", "dep:arrow"]
-tree-sitter = ["dep:tree-sitter", "dep:tree-sitter-python", "dep:tree-sitter-c"]
+tree-sitter = ["dep:tree-sitter", "dep:tree-sitter-python", "dep:tree-sitter-c", "dep:tree-sitter-typescript"]
 pest = ["dep:pest", "dep:pest_derive"]
 ml = ["dep:aprender"]
 llm = ["dep:entrenar"]
@@ -155,6 +156,21 @@ harness = false
 [[bench]]
 name = "oracle"
 harness = false
+
+[[example]]
+name = "grammar_validation"
+required-features = ["tree-sitter"]
+
+[[example]]
+name = "generator_basic"
+
+[[example]]
+name = "backend_selector"
+required-features = ["ml"]
+
+[[example]]
+name = "experiment_tracking"
+required-features = ["ml"]
 
 [profile.release]
 opt-level = 3

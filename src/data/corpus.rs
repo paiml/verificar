@@ -206,13 +206,18 @@ impl CorpusManager {
     /// Returns (feature_matrix, labels) for ML training
     #[must_use]
     pub fn to_training_data(&self) -> (Vec<[f32; 8]>, Vec<u8>) {
-        let features: Vec<[f32; 8]> = self.corpus.features.iter().map(|f| f.to_array()).collect();
+        let features: Vec<[f32; 8]> = self
+            .corpus
+            .features
+            .iter()
+            .map(CommitFeatures::to_array)
+            .collect();
 
         let labels: Vec<u8> = self
             .corpus
             .tuples
             .iter()
-            .map(|t| if t.is_correct { 1 } else { 0 })
+            .map(|t| u8::from(t.is_correct))
             .collect();
 
         (features, labels)
@@ -220,7 +225,11 @@ impl CorpusManager {
 
     /// Split corpus into train/test sets
     #[must_use]
-    pub fn train_test_split(&self, train_ratio: f64, seed: u64) -> (TrainingCorpus, TrainingCorpus) {
+    pub fn train_test_split(
+        &self,
+        train_ratio: f64,
+        seed: u64,
+    ) -> (TrainingCorpus, TrainingCorpus) {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
@@ -265,12 +274,7 @@ impl CorpusManager {
     pub fn filter_correct(&self, correct: bool) -> TrainingCorpus {
         let mut filtered = TrainingCorpus::default();
 
-        for (tuple, features) in self
-            .corpus
-            .tuples
-            .iter()
-            .zip(self.corpus.features.iter())
-        {
+        for (tuple, features) in self.corpus.tuples.iter().zip(self.corpus.features.iter()) {
             if tuple.is_correct == correct {
                 filtered.tuples.push(tuple.clone());
                 filtered.features.push(features.clone());

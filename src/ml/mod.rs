@@ -15,11 +15,13 @@
 mod active_learner;
 mod aprender;
 mod augmentation;
+mod backend;
 mod codex_pipeline;
 mod commit_features;
 mod defect_predictor;
 mod entrenar;
 mod evaluator;
+mod experiment;
 mod quality_gate;
 mod rich_labeling;
 mod rl_prioritizer;
@@ -31,12 +33,11 @@ pub use self::active_learner::{
     KMeansClustering,
 };
 pub use self::aprender::AprenderBugPredictor;
+pub use self::augmentation::{AugmentationResult, BatchAugmenter, CodeEDA, CodeEDAConfig};
+pub use self::backend::{Backend, BackendSelector, BatchConfig, OpComplexity, SelectionStats};
 pub use self::codex_pipeline::{
     CodexPipeline, DataQualityMetrics, PipelineConfig, PipelineResult, PipelineStats,
     PreparedSample, StageResult,
-};
-pub use self::augmentation::{
-    AugmentationResult, BatchAugmenter, CodeEDA, CodeEDAConfig,
 };
 pub use self::commit_features::{CommitFeatureExtractor, CommitFeatures, FeatureStats};
 pub use self::defect_predictor::{
@@ -44,13 +45,17 @@ pub use self::defect_predictor::{
     DefectSample,
 };
 pub use self::entrenar::{
-    generate_entrenar_config, CodeTranslationExample, DistillationConfig, DistillationResult,
-    DistillTrainingConfig, EntrenarExporter, ExportConfig, ExportFormat, ExportStats,
-    PromptTemplate, StudentConfig,
+    generate_entrenar_config, CodeTranslationExample, DistillTrainingConfig, DistillationConfig,
+    DistillationResult, EntrenarExporter, ExportConfig, ExportFormat, ExportStats, PromptTemplate,
+    StudentConfig,
 };
 pub use self::evaluator::{
     benchmark_inference, calculate_feature_importance, BenchmarkResult, ComparisonMetrics,
     ConfusionMatrix, FeatureImportance, ModelComparison, RocCurve, RocPoint,
+};
+pub use self::experiment::{
+    AppleChip, ComputeDevice, CostMetrics, CpuArchitecture, EnergyMetrics, ExperimentMetrics,
+    GenerationExperiment, GpuVendor, TpuVersion,
 };
 pub use self::quality_gate::{
     CodeQualityFeatures, FeatureExtractor as QualityFeatureExtractor, QualityGate,

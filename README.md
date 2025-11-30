@@ -10,7 +10,7 @@ Verificar is a unified combinatorial test generation and synthetic data factory 
 
 ## Features
 
-- **Multi-Language Support**: Generate test programs in Python, Bash, C, and Ruchy
+- **Multi-Language Support**: Generate test programs in Python, Bash, C, TypeScript, and Ruchy
 - **Combinatorial Generation**: Exhaustive enumeration of valid programs up to configurable depth
 - **Mutation Testing**: AST-level mutation operators (AOR, ROR, LOR, BSR, etc.)
 - **Verification Oracle**: Sandboxed execution with I/O diffing for correctness verification
@@ -79,12 +79,14 @@ verificar depyler --category file_io --count 100 --output depyler_tests/
 
 ## Supported Languages
 
-| Language | Generator | Description |
-|----------|-----------|-------------|
-| Python | `PythonEnumerator` | Functions, control flow, type hints |
-| Bash | `BashEnumerator` | 1000+ patterns: variables, pipes, conditionals |
-| C | `CEnumerator` | Functions, pointers, memory operations |
-| Ruchy | `RuchyEnumerator` | Custom DSL programs |
+| Language | Grammar | Description |
+|----------|---------|-------------|
+| Python | `PythonGrammar` | Functions, control flow, type hints (depyler source) |
+| Bash | `BashGrammar` | Variables, pipes, conditionals (bashrs source) |
+| C | `CGrammar` | Functions, pointers, memory operations (decy source) |
+| TypeScript | `TypeScriptGrammar` | Interfaces, generics, type annotations (decy target) |
+| Ruchy | `RuchyGrammar` | Custom DSL programs |
+| Rust | - | Common target language |
 
 ## Sampling Strategies
 

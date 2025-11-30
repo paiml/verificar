@@ -295,7 +295,10 @@ impl CodexPipeline {
     }
 
     /// Stage 1: Filter by quality gate
-    pub fn filter_quality<'a>(&mut self, codes: &'a [GeneratedCode]) -> (Vec<&'a GeneratedCode>, StageResult) {
+    pub fn filter_quality<'a>(
+        &mut self,
+        codes: &'a [GeneratedCode],
+    ) -> (Vec<&'a GeneratedCode>, StageResult) {
         let start = std::time::Instant::now();
         let input_count = codes.len();
 
@@ -527,10 +530,9 @@ impl CodexPipeline {
         self.stats.oracle_calls += oracle_calls;
 
         if self.stats.runs > 1 {
-            self.stats.avg_oracle_reduction = (self.stats.avg_oracle_reduction
-                * (self.stats.runs - 1) as f32
-                + oracle_reduction)
-                / self.stats.runs as f32;
+            self.stats.avg_oracle_reduction =
+                (self.stats.avg_oracle_reduction * (self.stats.runs - 1) as f32 + oracle_reduction)
+                    / self.stats.runs as f32;
         } else {
             self.stats.avg_oracle_reduction = oracle_reduction;
         }

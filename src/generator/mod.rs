@@ -261,8 +261,8 @@ impl Generator {
                     .filter(|p| grammar.validate(&p.code))
                     .collect()
             }
-            Language::Rust => {
-                // Rust is a target language, not a source for generation
+            Language::Rust | Language::TypeScript => {
+                // Rust and TypeScript are target languages, not sources for generation
                 vec![]
             }
         }
@@ -289,7 +289,7 @@ impl Generator {
                 let enumerator = RuchyEnumerator::new(max_depth);
                 enumerator.enumerate_programs()
             }
-            Language::Rust => vec![],
+            Language::Rust | Language::TypeScript => vec![],
         };
 
         let total = all_programs.len();

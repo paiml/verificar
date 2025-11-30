@@ -266,6 +266,10 @@ impl DefectPredictor {
     /// Train on samples (linear model fallback)
     ///
     /// Uses gradient descent to optimize feature weights.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `samples` is empty.
     pub fn train(&mut self, samples: &[DefectSample]) -> crate::Result<()> {
         if samples.is_empty() {
             return Err(crate::Error::Data("No training samples".to_string()));
@@ -297,8 +301,8 @@ impl DefectPredictor {
 
             // Update weights
             let n = samples.len() as f32;
-            for i in 0..8 {
-                self.feature_weights[i] -= learning_rate * gradient[i] / n;
+            for (i, grad) in gradient.iter().enumerate() {
+                self.feature_weights[i] -= learning_rate * grad / n;
             }
             self.bias -= learning_rate * bias_gradient / n;
         }
@@ -533,9 +537,7 @@ mod tests {
     #[test]
     fn test_category_weights_get() {
         let weights = CategoryWeights::default();
-        assert!(
-            (weights.get(DefectCategory::AstTransform) - 2.0).abs() < f32::EPSILON
-        );
+        assert!((weights.get(DefectCategory::AstTransform) - 2.0).abs() < f32::EPSILON);
     }
 
     #[test]

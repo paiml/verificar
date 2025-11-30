@@ -213,7 +213,7 @@ impl CommitFeatureExtractor {
             self.file_last_modified.insert(file.clone(), timestamp);
         }
 
-        features.days_since_last_change = if min_days == f64::MAX {
+        features.days_since_last_change = if min_days >= f64::MAX - 1.0 {
             365.0 // Default for new files
         } else {
             (min_days as f32).min(365.0)
@@ -246,7 +246,9 @@ impl CommitFeatureExtractor {
     /// Detect if test files were changed
     fn detect_test_changes(&self, diff: &str) -> bool {
         for line in diff.lines() {
-            if line.starts_with("diff --git") || line.starts_with("--- ") || line.starts_with("+++ ")
+            if line.starts_with("diff --git")
+                || line.starts_with("--- ")
+                || line.starts_with("+++ ")
             {
                 let lower = line.to_lowercase();
                 if lower.contains("test")
