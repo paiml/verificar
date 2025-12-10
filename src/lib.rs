@@ -46,6 +46,7 @@
 // Note: Lint configuration is in Cargo.toml [workspace.lints]
 #![forbid(unsafe_code)]
 
+pub mod audit;
 pub mod data;
 pub mod error;
 pub mod generator;
@@ -58,6 +59,12 @@ pub mod transpiler;
 use serde::{Deserialize, Serialize};
 
 pub use error::{Error, Result};
+
+// Audit Trail exports (entrenar-style provenance)
+pub use audit::{
+    new_audit_collector, AuditCollector, AuditStats, AuditTrace, ChainVerification,
+    ExecutionSummary, HashChainEntry, VerificationPath, VerificationTimer,
+};
 
 /// Supported source languages for generation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -50,7 +50,7 @@ pub struct ExecutionResult {
 }
 
 /// Verdict from verification
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Verdict {
     /// I/O equivalent - transpilation is correct
     Pass,
@@ -97,7 +97,7 @@ pub struct VerificationResult {
 }
 
 /// Phase of execution
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Phase {
     /// Executing source code
     Source,
