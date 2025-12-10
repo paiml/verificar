@@ -1,11 +1,11 @@
 [package]
-name = "test_016_exit_exception_handling"
+name = "test_032_exception_suppression"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "test_016_exit_exception_handling"
-path = "test_016_exit_exception_handling.rs"
+name = "test_032_exception_suppression"
+path = "test_032_exception_suppression.rs"
 
 [dependencies]
 serde_json = "1.0"

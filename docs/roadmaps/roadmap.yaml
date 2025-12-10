@@ -29,11 +29,11 @@ roadmap:
   github_issue: null
   item_type: task
   title: Add TypeScript grammar for decy target
-  status: cancelled
+  status: completed
   priority: medium
   assigned_to: null
   created: 1970-01-01T00:00:00Z
-  updated: 1970-01-01T00:00:00Z
+  updated: 2025-11-30T21:25:09.726162633+00:00
   spec: null
   acceptance_criteria:
   - TypeScriptGrammar with tree-sitter-typescript
