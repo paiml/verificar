@@ -229,6 +229,26 @@ enum Commands {
         #[arg(long, default_value = "false")]
         gen_config: bool,
     },
+
+    /// Generate CWE-targeted mutations for bash scripts (ShellSafetyBench)
+    Mutate {
+        /// CWE IDs to target (comma-separated, e.g. "78,94,330,362")
+        /// Use "all" for all in-distribution CWEs, "ood" for out-of-distribution
+        #[arg(long, default_value = "all")]
+        cwe_targets: String,
+
+        /// Number of mutations to generate
+        #[arg(short, long, default_value = "100")]
+        count: usize,
+
+        /// Random seed for reproducible generation
+        #[arg(long, default_value = "42")]
+        seed: u64,
+
+        /// Output format (text, json, jsonl)
+        #[arg(short, long, default_value = "jsonl")]
+        output: String,
+    },
 }
 
 fn parse_language(s: &str) -> Language {
@@ -1189,6 +1209,68 @@ data:
                     std::process::exit(1);
                 }
             }
+        }
+
+        Commands::Mutate {
+            cwe_targets,
+            count,
+            seed,
+            output,
+        } => {
+            use verificar::mutator::cwe_bash;
+
+            let targets: Vec<u32> = match cwe_targets.as_str() {
+                "all" => {
+                    let mut all = cwe_bash::in_distribution_cwes();
+                    all.extend(cwe_bash::ood_cwes());
+                    all
+                }
+                "in-distribution" | "id" => cwe_bash::in_distribution_cwes(),
+                "ood" | "out-of-distribution" => cwe_bash::ood_cwes(),
+                _ => cwe_targets
+                    .split(',')
+                    .filter_map(|s| s.trim().parse::<u32>().ok())
+                    .collect(),
+            };
+
+            if targets.is_empty() {
+                eprintln!("Error: No valid CWE targets specified");
+                std::process::exit(1);
+            }
+
+            let mutations = cwe_bash::generate_cwe_mutations(&targets, count, seed);
+
+            match output.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&mutations).unwrap_or_default()
+                    );
+                }
+                "jsonl" => {
+                    for m in &mutations {
+                        println!("{}", serde_json::to_string(m).unwrap_or_default());
+                    }
+                }
+                _ => {
+                    for (i, m) in mutations.iter().enumerate() {
+                        println!("--- Mutation {} ({}) ---", i + 1, m.cwe);
+                        println!("Vulnerability: {}", m.vulnerability);
+                        println!("Description: {}", m.mutation_description);
+                        println!("Safe:");
+                        println!("{}", m.safe_script);
+                        println!("Unsafe:");
+                        println!("{}", m.unsafe_script);
+                        println!();
+                    }
+                }
+            }
+
+            eprintln!(
+                "Generated {} CWE-targeted mutations (targets: {:?})",
+                mutations.len(),
+                targets
+            );
         }
     }
 }

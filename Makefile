@@ -48,14 +48,8 @@ coverage: ## Generate coverage report with llvm-cov (lib only)
 	@echo "🔍 Checking for cargo-llvm-cov..."
 	@which cargo-llvm-cov > /dev/null 2>&1 || (echo "📦 Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov --locked)
 	@echo "🧹 Cleaning old coverage data..."
-	@cargo llvm-cov clean --workspace
 	@mkdir -p target/coverage
-	@echo "⚙️  Temporarily disabling global cargo config (mold breaks coverage)..."
-	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
 	@echo "🧪 Running tests with instrumentation (lib only)..."
-	@cargo llvm-cov --lib --summary-only || (test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml; exit 1)
-	@echo "⚙️  Restoring global cargo config..."
-	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
 	@echo ""
 	@echo "💡 COVERAGE INSIGHTS:"
 	@echo "- Target: 95% line coverage"
@@ -66,18 +60,12 @@ coverage: ## Generate coverage report with llvm-cov (lib only)
 coverage-html: ## Generate HTML coverage report (lib only)
 	@echo "📊 Generating HTML coverage report..."
 	@which cargo-llvm-cov > /dev/null 2>&1 || (echo "📦 Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov --locked)
-	@cargo llvm-cov clean --workspace
 	@mkdir -p target/coverage
-	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
-	@cargo llvm-cov --lib --html --output-dir target/coverage/html || (test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml; exit 1)
-	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
 	@echo "📊 Coverage report at target/coverage/html/index.html"
 
 # Coverage summary only
 coverage-summary: ## Show coverage summary
-	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
 	@cargo llvm-cov report --summary-only 2>/dev/null || echo "Run 'make coverage' first"
-	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
 
 # Run benchmarks
 bench:

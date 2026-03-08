@@ -37,9 +37,11 @@
 //! ```
 
 mod ast_mutator;
+pub mod cwe_bash;
 mod operators;
 
 pub use ast_mutator::{AstMutation, AstMutator};
+pub use cwe_bash::{generate_cwe_mutations, CweMutation};
 pub use operators::MutationOperator;
 
 use crate::{Error, Result};
