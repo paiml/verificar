@@ -453,6 +453,7 @@ impl AuditCollector {
 
     /// Verify hash chain integrity.
     pub fn verify_chain(&self) -> ChainVerification {
+        contract_pre_oracle_verdict!(input);
         let mut entries_verified = 0;
 
         for (i, entry) in self.entries.iter().enumerate() {

@@ -95,6 +95,7 @@ impl Mutator {
             return Err(Error::Mutation("cannot mutate empty code".to_string()));
         }
 
+        contract_pre_mutation_soundness!(code);
         let mut mutations = Vec::new();
 
         for operator in &self.enabled_operators {

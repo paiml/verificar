@@ -185,6 +185,7 @@ impl DataPipeline {
     ///
     /// Returns generated code and statistics.
     pub fn generate(&self) -> (Vec<GeneratedCode>, PipelineStats) {
+        contract_pre_generator_coverage!(input);
         let start = std::time::Instant::now();
         let count_per_language = self.config.count / self.languages.len().max(1);
 
